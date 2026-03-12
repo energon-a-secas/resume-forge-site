@@ -1,0 +1,15 @@
+# Assets
+*.ico
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.webp
+
+# Wrangler build
+.wrangler/
+worker/.wrangler/
+
+# License
+LICENSE

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resume Forge — Build Gaming Resumes</title>
+  <meta name="description" content="Create tech and gaming resumes with heart-rated skills, PSN trophies, Steam stats, and custom visual themes. Export as PDF">
+  <meta property="og:title" content="Resume Forge — Build Gaming Resumes">
+  <meta property="og:description" content="Create tech and gaming resumes with live gaming stats and custom themes">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://resume.neorgon.com/">
+  <meta property="og:site_name" content="Neorgon">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Resume Forge — Build Gaming Resumes">
+  <meta name="twitter:description" content="Create tech and gaming resumes with live gaming stats and custom themes">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://resume.neorgon.com/">
+  <meta property="og:locale" content="en_US">
+  <meta name="theme-color" content="#8b5cf6">
+  <!-- og:image: uncomment when social preview image is ready (1200x630 PNG)
+  <meta property="og:image" content="https://resume.neorgon.com/og-preview.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630"> -->
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  <link rel="stylesheet" href="css/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Resume Forge",
+    "description": "Create tech and gaming resumes with heart-rated skills, PSN trophies, Steam stats, and custom visual themes. Export as PDF",
+    "url": "https://resume.neorgon.com/",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Any",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "author": { "@type": "Organization", "name": "Neorgon", "url": "https://neorgon.com/" }
+  }
+  </script>
+</head>
+<body>
+
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="header-bar">
+    <div class="header-logo">
+      <a href="https://ehq.cl/" target="_blank" rel="noopener noreferrer">
+        <img src="energon-classic-logo.png" class="header-logo-img" alt="Logo">
+      </a>
+      <div>
+        <h1>Resume Forge</h1>
+        <div class="header-subtitle">Build gaming-inspired resumes</div>
+      </div>
+    </div>
+
+    <a class="header-home" href="https://neorgon.com/" title="neorgon.com" aria-label="Neorgon home">
+      <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+      </svg>
+    </a>
+  </header>
+
+  <main id="main">
+    <div class="editor-layout">
+      <!-- Preview Panel -->
+      <div class="preview-panel">
+        <div class="preview-header">
+          <h2>Preview</h2>
+          <button class="btn-secondary" id="exportBtn">Export PDF</button>
+        </div>
+        <div class="canvas-wrapper">
+          <canvas id="resumeCanvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Editor Panel -->
+      <div class="editor-panel">
+        <div class="editor-tabs">
+          <button class="editor-tab active" data-tab="personal">Personal</button>
+          <button class="editor-tab" data-tab="experience">Experience</button>
+          <button class="editor-tab" data-tab="skills">Skills</button>
+          <button class="editor-tab" data-tab="education">Education</button>
+          <button class="editor-tab" data-tab="gaming">Gaming</button>
+          <button class="editor-tab" data-tab="layout">Layout</button>
+          <button class="editor-tab" data-tab="assets">Assets</button>
+        </div>
+
+        <div class="editor-content">
+          <!-- Personal Tab -->
+          <div class="editor-section" id="personalSection">
+            <div class="form-group">
+              <label for="inputName">Full Name</label>
+              <input type="text" id="inputName" placeholder="Your name">
+            </div>
+            <div class="form-group">
+              <label for="inputTitle">Job Title</label>
+              <input type="text" id="inputTitle" placeholder="e.g., Senior Software Engineer">
+            </div>
+            <div class="form-group">
+              <label for="inputLocation">Location</label>
+              <input type="text" id="inputLocation" placeholder="e.g., San Francisco, CA">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="inputEmail">Email</label>
+                <input type="email" id="inputEmail" placeholder="your@email.com">
+              </div>
+              <div class="form-group">
+                <label for="inputPhone">Phone</label>
+                <input type="tel" id="inputPhone" placeholder="+1 (555) 000-0000">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="inputLinkedin">LinkedIn</label>
+                <input type="text" id="inputLinkedin" placeholder="linkedin.com/in/...">
+              </div>
+              <div class="form-group">
+                <label for="inputGithub">GitHub</label>
+                <input type="text" id="inputGithub" placeholder="github.com/...">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="inputWebsite">Website</label>
+              <input type="text" id="inputWebsite" placeholder="yoursite.com">
+            </div>
+            <div class="form-group">
+              <label for="inputSummary">Summary</label>
+              <textarea id="inputSummary" rows="4" placeholder="Brief professional summary..."></textarea>
+            </div>
+          </div>
+
+          <!-- Experience Tab -->
+          <div class="editor-section hidden" id="experienceSection">
+            <div class="section-header">
+              <h3>Work Experience</h3>
+              <button class="btn-add" id="addExperienceBtn">+ Add</button>
+            </div>
+            <div id="experienceList"></div>
+          </div>
+
+          <!-- Skills Tab -->
+          <div class="editor-section hidden" id="skillsSection">
+            <div class="section-header">
+              <h3>Skills</h3>
+              <button class="btn-add" id="addSkillBtn">+ Add</button>
+            </div>
+            <div id="skillsList"></div>
+          </div>
+
+          <!-- Education Tab -->
+          <div class="editor-section hidden" id="educationSection">
+            <div class="section-header">
+              <h3>Education</h3>
+              <button class="btn-add" id="addEducationBtn">+ Add</button>
+            </div>
+            <div id="educationList"></div>
+            <div class="section-header" style="margin-top: 24px;">
+              <h3>Languages</h3>
+              <button class="btn-add" id="addLanguageBtn">+ Add</button>
+            </div>
+            <div id="languagesList"></div>
+          </div>
+
+          <!-- Gaming Tab -->
+          <div class="editor-section hidden" id="gamingSection">
+            <div class="form-group">
+              <label>
+                <input type="checkbox" id="gamingEnabled"> Include gaming stats
+              </label>
+            </div>
+            <div id="gamingFields" class="hidden">
+              <div class="form-group">
+                <label for="inputPsnUsername">PSN Username</label>
+                <input type="text" id="inputPsnUsername" placeholder="Your PSN ID">
+                <button class="btn-fetch" id="fetchPsnBtn">Fetch PSN Stats</button>
+              </div>
+              <div id="psnStats" class="stats-display hidden"></div>
+
+              <div class="form-group" style="margin-top: 20px;">
+                <label for="inputSteamId">Steam ID</label>
+                <input type="text" id="inputSteamId" placeholder="Your Steam ID (numbers)">
+                <button class="btn-fetch" id="fetchSteamBtn">Fetch Steam Stats</button>
+              </div>
+              <div id="steamStats" class="stats-display hidden"></div>
+            </div>
+          </div>
+
+          <!-- Layout Tab -->
+          <div class="editor-section hidden" id="layoutSection">
+            <div class="form-group">
+              <label>Column Position</label>
+              <div class="radio-group">
+                <label><input type="radio" name="columnSide" value="left" checked> Left</label>
+                <label><input type="radio" name="columnSide" value="right"> Right</label>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="inputColumnWidth">Column Width: <span id="columnWidthValue">30</span>%</label>
+              <input type="range" id="inputColumnWidth" min="20" max="40" value="30" step="1">
+            </div>
+            <div class="form-group">
+              <label for="inputColumnColor">Column Color</label>
+              <input type="color" id="inputColumnColor" value="#2d5016">
+            </div>
+            <div class="form-group">
+              <label for="inputColumnOpacity">Column Opacity: <span id="columnOpacityValue">100</span>%</label>
+              <input type="range" id="inputColumnOpacity" min="0" max="100" value="100" step="5">
+            </div>
+            <div class="form-group">
+              <label for="inputFontHeading">Heading Font</label>
+              <select id="inputFontHeading">
+                <option value="Permanent Marker">Permanent Marker</option>
+                <option value="Press Start 2P">Press Start 2P</option>
+                <option value="Bangers">Bangers</option>
+                <option value="Righteous">Righteous</option>
+                <option value="Bebas Neue">Bebas Neue</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="inputFontBody">Body Font</label>
+              <select id="inputFontBody">
+                <option value="Inter" selected>Inter</option>
+                <option value="Roboto">Roboto</option>
+                <option value="Open Sans">Open Sans</option>
+                <option value="Lato">Lato</option>
+                <option value="Avenir Next">Avenir Next</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Assets Tab -->
+          <div class="editor-section hidden" id="assetsSection">
+            <div class="form-group">
+              <label>Profile Photo</label>
+              <input type="file" id="inputProfilePhoto" accept="image/*">
+              <div id="profilePhotoPreview" class="image-preview hidden"></div>
+            </div>
+            <div class="form-group">
+              <label>Background Image (Column)</label>
+              <input type="file" id="inputBgImage" accept="image/*">
+              <div id="bgImagePreview" class="image-preview hidden"></div>
+            </div>
+            <button class="btn-secondary" id="clearAssetsBtn">Clear All Assets</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="info-footer">
+    Part of <a class="footer-link" href="https://neorgon.com/">Neorgon</a>
+  </footer>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
