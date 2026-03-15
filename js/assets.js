@@ -22,6 +22,33 @@ export function uploadImage(file) {
   });
 }
 
+// Preload profile image for canvas rendering
+export function preloadProfileImage(base64) {
+  if (!base64) {
+    window._loadedProfileImage = null;
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+
+    img.onload = () => {
+      window._loadedProfileImage = img;
+      console.log('✓ Image preloaded:', img.width, 'x', img.height);
+      resolve(img);
+    };
+
+    img.onerror = (err) => {
+      console.error('✗ Image load error:', err);
+      showToast('Failed to load image');
+      window._loadedProfileImage = null;
+      reject(new Error('Image load failed'));
+    };
+
+    img.src = base64;
+  });
+}
+
 // Show image preview
 export function showImagePreview(containerId, base64) {
   const container = document.getElementById(containerId);
@@ -38,10 +65,39 @@ export function showImagePreview(containerId, base64) {
   }
 }
 
+// Preload background image for canvas rendering
+export function preloadBgImage(base64) {
+  if (!base64) {
+    window._loadedBgImage = null;
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+
+    img.onload = () => {
+      window._loadedBgImage = img;
+      console.log('✓ BG image preloaded:', img.width, 'x', img.height);
+      resolve(img);
+    };
+
+    img.onerror = (err) => {
+      console.error('✗ BG image load error:', err);
+      showToast('Failed to load background image');
+      window._loadedBgImage = null;
+      reject(new Error('BG image load failed'));
+    };
+
+    img.src = base64;
+  });
+}
+
 // Clear all assets
 export function clearAllAssets(state) {
   state.assets.profilePhoto = '';
   state.assets.bgImage = '';
+  window._loadedProfileImage = null;
+  window._loadedBgImage = null;
   showImagePreview('profilePhotoPreview', '');
   showImagePreview('bgImagePreview', '');
   showToast('All assets cleared');

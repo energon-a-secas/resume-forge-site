@@ -11,6 +11,8 @@ export const state = {
   linkedin: '',
   github: '',
   website: '',
+  linktree: '',
+  twitter: '',
   summary: '',
 
   // Experience
@@ -40,12 +42,37 @@ export const state = {
     columnWidth: 30,
     columnColor: '#2d5016',
     columnOpacity: 100,
+    bgDim: 0, // 0-100, black overlay opacity over background image
+    template: 'standard', // 'standard' | 'big-header'
+    spacing: 'normal', // 'tight' | 'normal' | 'relaxed'
   },
+
+  // Sidebar sections (configurable order and visibility)
+  sidebarSections: [
+    { id: 'skills', enabled: true, title: 'SKILLS' },
+    { id: 'education', enabled: true, title: 'EDUCATION' },
+    { id: 'languages', enabled: true, title: 'LANGUAGES' },
+    { id: 'certifications', enabled: false, title: 'CERTIFICATIONS' },
+    { id: 'custom1', enabled: false, title: 'CUSTOM' },
+  ],
+
+  // Certifications
+  certifications: [],
+
+  // Projects (optional, for tech resumes)
+  projects: [],
+
+  // Awards & Achievements
+  awards: [],
 
   // Assets
   assets: {
     profilePhoto: '',
     bgImage: '',
+    photoShape: 'circle', // 'circle' | 'square' | 'rounded'
+    photoBorder: true,
+    borderColor: '#8b5cf6',
+    borderWidth: 4,
   },
 
   // Typography

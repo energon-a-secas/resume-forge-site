@@ -12,6 +12,8 @@ export function renderPersonalInputs() {
   document.getElementById('inputLinkedin').value = state.linkedin;
   document.getElementById('inputGithub').value = state.github;
   document.getElementById('inputWebsite').value = state.website;
+  document.getElementById('inputLinktree').value = state.linktree;
+  document.getElementById('inputTwitter').value = state.twitter;
   document.getElementById('inputSummary').value = state.summary;
 }
 

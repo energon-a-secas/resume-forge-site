@@ -9,6 +9,8 @@ export function defaultState() {
     linkedin: 'linkedin.com/in/johndoe',
     github: 'github.com/johndoe',
     website: 'johndoe.dev',
+    linktree: 'linktr.ee/johndoe',
+    twitter: 'twitter.com/johndoe',
     summary: 'Passionate software engineer with 5+ years of experience building scalable web applications and leading technical teams.',
 
     experience: [
@@ -17,14 +19,14 @@ export function defaultState() {
         role: 'Senior Software Engineer',
         dates: '2020 - Present',
         location: 'San Francisco, CA',
-        description: 'Led development of microservices architecture serving 10M+ users. Mentored junior developers and established best practices.',
+        description: 'Led development of microservices architecture serving 10M+ users.\n• Designed and implemented RESTful APIs\n• Mentored 5+ junior developers\n• Established team coding standards',
       },
       {
         company: 'Startup Inc',
         role: 'Full Stack Developer',
         dates: '2018 - 2020',
         location: 'Remote',
-        description: 'Built core product features using React and Node.js. Improved performance by 40% through optimization.',
+        description: 'Built core product features using React and Node.js.\n- Improved page load performance by 40%\n- Implemented real-time notifications\n- Contributed to open-source libraries',
       },
     ],
 
@@ -64,11 +66,31 @@ export function defaultState() {
       columnWidth: 30,
       columnColor: '#2d5016',
       columnOpacity: 100,
+      bgDim: 0,
+      template: 'standard', // 'standard' | 'big-header'
+      spacing: 'tight', // 'tight' | 'normal' | 'relaxed'
     },
+
+    sidebarSections: [
+      { id: 'skills', enabled: true, title: 'SKILLS' },
+      { id: 'education', enabled: true, title: 'EDUCATION' },
+      { id: 'languages', enabled: true, title: 'LANGUAGES' },
+      { id: 'gaming', enabled: false, title: 'GAMING' },
+      { id: 'certifications', enabled: false, title: 'CERTIFICATIONS' },
+      { id: 'custom1', enabled: false, title: 'CUSTOM', content: '' },
+    ],
+
+    certifications: [],
+    projects: [],
+    awards: [],
 
     assets: {
       profilePhoto: '',
       bgImage: '',
+      photoShape: 'circle',
+      photoBorder: true,
+      borderColor: '#8b5cf6',
+      borderWidth: 4,
     },
 
     fonts: {

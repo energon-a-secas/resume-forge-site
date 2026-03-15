@@ -36,7 +36,7 @@ export function exportPDF() {
     const name = state.name || 'resume';
     const filename = `${name.toLowerCase().replace(/\s+/g, '-')}.pdf`;
     doc.save(filename);
-    showToast('Resume exported!');
+    showToast('✅ PDF exported! Note: Social links are visual only (not clickable in PDF)');
   };
 
   if (window.jspdf) {

@@ -21,8 +21,9 @@
   <meta property="og:image" content="https://resume.neorgon.com/og-preview.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630"> -->
-  <link rel="icon" type="image/x-icon" href="favicon.ico" />
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" type="image/x-icon" href="https://pub-b597cd281a384f98a47e1f043a6c4160.r2.dev/v1.0.0/favicon.ico" />
+  <link rel="stylesheet" href="https://pub-b597cd281a384f98a47e1f043a6c4160.r2.dev/v1.0.0/styles/base.css">
+    <link rel="stylesheet" href="css/style.css">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -47,8 +48,8 @@
         <img src="energon-classic-logo.png" class="header-logo-img" alt="Logo">
       </a>
       <div>
-        <h1>Resume Forge</h1>
-        <div class="header-subtitle">Build gaming-inspired resumes</div>
+        <h1>RESUME FORGE</h1>
+        <div class="header-subtitle">// LEVEL UP YOUR CV</div>
       </div>
     </div>
 
@@ -64,8 +65,8 @@
       <!-- Preview Panel -->
       <div class="preview-panel">
         <div class="preview-header">
-          <h2>Preview</h2>
-          <button class="btn-secondary" id="exportBtn">Export PDF</button>
+          <h2>// PREVIEW</h2>
+          <button class="btn-secondary" id="exportBtn">⚡ EXPORT PDF</button>
         </div>
         <div class="canvas-wrapper">
           <canvas id="resumeCanvas"></canvas>
@@ -79,7 +80,9 @@
           <button class="editor-tab" data-tab="experience">Experience</button>
           <button class="editor-tab" data-tab="skills">Skills</button>
           <button class="editor-tab" data-tab="education">Education</button>
+          <button class="editor-tab" data-tab="certifications">Certs</button>
           <button class="editor-tab" data-tab="gaming">Gaming</button>
+          <button class="editor-tab" data-tab="sidebar">Sidebar</button>
           <button class="editor-tab" data-tab="layout">Layout</button>
           <button class="editor-tab" data-tab="assets">Assets</button>
         </div>
@@ -123,6 +126,16 @@
               <label for="inputWebsite">Website</label>
               <input type="text" id="inputWebsite" placeholder="yoursite.com">
             </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="inputLinktree">Linktree</label>
+                <input type="text" id="inputLinktree" placeholder="linktr.ee/yourname">
+              </div>
+              <div class="form-group">
+                <label for="inputTwitter">Twitter/X</label>
+                <input type="text" id="inputTwitter" placeholder="twitter.com/yourname">
+              </div>
+            </div>
             <div class="form-group">
               <label for="inputSummary">Summary</label>
               <textarea id="inputSummary" rows="4" placeholder="Brief professional summary..."></textarea>
@@ -161,6 +174,15 @@
             <div id="languagesList"></div>
           </div>
 
+          <!-- Certifications Tab -->
+          <div class="editor-section hidden" id="certificationsSection">
+            <div class="section-header">
+              <h3>Certifications</h3>
+              <button class="btn-add" id="addCertificationBtn">+ Add</button>
+            </div>
+            <div id="certificationsList"></div>
+          </div>
+
           <!-- Gaming Tab -->
           <div class="editor-section hidden" id="gamingSection">
             <div class="form-group">
@@ -185,9 +207,43 @@
             </div>
           </div>
 
+          <!-- Sidebar Tab -->
+          <div class="editor-section hidden" id="sidebarSection">
+            <div class="form-group">
+              <label>Sidebar Sections</label>
+              <p style="color: #888; font-size: 13px; margin-bottom: 12px;">
+                Enable/disable and reorder sections in the sidebar. Drag to reorder.
+              </p>
+            </div>
+            <div id="sidebarSectionsList"></div>
+          </div>
+
           <!-- Layout Tab -->
           <div class="editor-section hidden" id="layoutSection">
             <div class="form-group">
+              <label>Layout Template</label>
+              <div class="radio-group">
+                <label><input type="radio" name="layoutTemplate" value="standard" checked> Standard (Sidebar)</label>
+                <label><input type="radio" name="layoutTemplate" value="big-header"> Big Header</label>
+              </div>
+              <small style="color: #888; display: block; margin-top: 4px;">
+                Big Header: Full-width header with two-column content
+              </small>
+            </div>
+
+            <div class="form-group">
+              <label>Spacing</label>
+              <div class="radio-group">
+                <label><input type="radio" name="spacing" value="tight" checked> Tight</label>
+                <label><input type="radio" name="spacing" value="normal"> Normal</label>
+                <label><input type="radio" name="spacing" value="relaxed"> Relaxed</label>
+              </div>
+              <small style="color: #888; display: block; margin-top: 4px;">
+                Tight spacing fits more content, relaxed is more readable
+              </small>
+            </div>
+
+            <div class="form-group" id="columnPositionGroup">
               <label>Column Position</label>
               <div class="radio-group">
                 <label><input type="radio" name="columnSide" value="left" checked> Left</label>
@@ -235,11 +291,47 @@
               <input type="file" id="inputProfilePhoto" accept="image/*">
               <div id="profilePhotoPreview" class="image-preview hidden"></div>
             </div>
+
+            <div class="form-group">
+              <label>Photo Frame Shape</label>
+              <div class="radio-group">
+                <label><input type="radio" name="photoShape" value="circle" checked> Circle</label>
+                <label><input type="radio" name="photoShape" value="rounded"> Rounded</label>
+                <label><input type="radio" name="photoShape" value="square"> Square</label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>
+                <input type="checkbox" id="photoBorderToggle" checked> Show Border
+              </label>
+            </div>
+
+            <div class="form-group" id="borderOptions">
+              <label for="inputBorderColor">Border Color</label>
+              <input type="color" id="inputBorderColor" value="#8b5cf6">
+            </div>
+
+            <div class="form-group" id="borderWidthGroup">
+              <label for="inputBorderWidth">Border Width: <span id="borderWidthValue">4</span>px</label>
+              <input type="range" id="inputBorderWidth" min="1" max="10" value="4" step="1">
+            </div>
+
             <div class="form-group">
               <label>Background Image (Column)</label>
               <input type="file" id="inputBgImage" accept="image/*">
               <div id="bgImagePreview" class="image-preview hidden"></div>
+              <small style="color: #888; display: block; margin-top: 8px;">
+                Recommended: 600×1200px or larger, portrait orientation
+              </small>
             </div>
+
+            <div class="form-group">
+              <label for="inputBgDim">Background Dim: <span id="bgDimValue">0</span>%</label>
+              <input type="range" id="inputBgDim" min="0" max="80" value="0" step="5">
+              <small style="color: #888;">Darken background image with black overlay</small>
+            </div>
+
             <button class="btn-secondary" id="clearAssetsBtn">Clear All Assets</button>
           </div>
         </div>

@@ -3,6 +3,7 @@
 const ALLOWED_ORIGINS = [
   'https://resume.neorgon.com',
   'http://localhost:8822',
+  'http://127.0.0.1:8822',
 ];
 
 // CORS headers
