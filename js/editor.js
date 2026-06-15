@@ -61,9 +61,9 @@ export function renderSkillsList() {
       </div>
       <div class="form-group">
         <label>Rating</label>
-        <div class="skill-rating">
+        <div class="skill-rating" role="radiogroup" aria-label="${(skill.name || 'Skill')} rating, ${skill.hearts} of 5">
           ${[1,2,3,4,5].map(h => `
-            <svg class="heart-icon ${h <= skill.hearts ? 'filled' : 'empty'}" viewBox="0 0 24 24" onclick="window.setSkillRating(${idx}, ${h})">
+            <svg class="heart-icon ${h <= skill.hearts ? 'filled' : 'empty'}" viewBox="0 0 24 24" role="radio" tabindex="0" aria-label="Rate ${h} of 5" aria-checked="${h === skill.hearts ? 'true' : 'false'}" onclick="window.setSkillRating(${idx}, ${h})" onkeydown="window.handleHeartKey(event, ${idx}, ${h})">
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
             </svg>
           `).join('')}
@@ -177,6 +177,14 @@ export function setSkillRating(idx, hearts) {
   }
 }
 
+// Keyboard activation for heart rating (Enter/Space)
+export function handleHeartKey(event, idx, hearts) {
+  if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar') {
+    event.preventDefault();
+    setSkillRating(idx, hearts);
+  }
+}
+
 // Remove skill
 export function removeSkill(idx) {
   state.skills.splice(idx, 1);
@@ -241,6 +249,7 @@ window.updateExperience = updateExperience;
 window.removeExperience = removeExperience;
 window.updateSkill = updateSkill;
 window.setSkillRating = setSkillRating;
+window.handleHeartKey = handleHeartKey;
 window.removeSkill = removeSkill;
 window.updateEducation = updateEducation;
 window.removeEducation = removeEducation;
