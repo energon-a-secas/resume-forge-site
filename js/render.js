@@ -503,7 +503,7 @@ function drawLanguagesSection(ctx, x, width, y, spacing, padding) {
   state.languages.forEach(lang => {
     ctx.font = `13px "${state.fonts.body}", sans-serif`;
     ctx.fillStyle = textColor;
-    ctx.fillText(`${lang.name} — ${lang.level}`, x + padding, y);
+    ctx.fillText(`${lang.name}: ${lang.level}`, x + padding, y);
     y += spacing.item + 5;
   });
 
