@@ -8,6 +8,9 @@
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
+  /* Hub card accent (PROJECTS.md section 4) */
+  --accent: #8b5cf6;
+  --accent-bright: #a78bfa;
   /* Suite neutrals (Neorgon void-first system) */
   --bg-dark: #040714;
   --bg-darker: #02040c;
@@ -617,18 +620,7 @@ input[type="checkbox"] {
 }
 
 /* ── Footer (see template-alignment block below for final values) ── */
-.info-footer {
-  text-align: center;
-  padding: 20px var(--space-lg);
-  color: var(--text-dim);
-  font-size: 0.8rem;
-  border-top: 1px solid var(--border-subtle);
-}
 
-.footer-link {
-  text-decoration: none;
-  transition: color 0.2s;
-}
 
 /* ── Focus & Accessibility ─────────────────────────────────── */
 :focus-visible {
@@ -723,23 +715,4 @@ input[type="checkbox"] {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(139, 92, 246, 0.8);
   background-clip: padding-box;
-}
-.info-footer {
-  text-align: center;
-  padding: 24px 24px 28px;
-  color: rgba(255,255,255,.45);
-  font-size: .78em;
-  line-height: 1.8;
-  border-top: 1px solid rgba(255,255,255,.08);
-  margin-top: 32px;
-}
-.footer-link {
-  color: rgba(255,255,255,.45);
-  text-decoration: none;
-  transition: color 200ms;
-}
-.footer-link:hover,
-.footer-link:focus-visible {
-  color: rgba(255,255,255,.72);
-  text-decoration: underline;
 }
