@@ -21,3 +21,11 @@ worker/.wrangler/
 # ── Secrets — never commit ────────────────────────────────────────────────────
 .env
 .env.*
+
+# ── Neorgon base (enforced by smoke check 20) ─────────────────────────────────
+!.env.example
+.forge/
+__pycache__/
+*.py[cod]
+skills-archived/
+*.log
