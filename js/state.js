@@ -1,3 +1,8 @@
+// Raw localStorage throws in private browsing, where the object exists but
+// every access raises. These wrappers return a fallback instead. Storage
+// keys and formats are unchanged, so existing saved data still loads.
+import { safeRemove } from './neorgon-persist.js';
+
 import { defaultState } from './data.js';
 
 // Shared mutable state
@@ -116,6 +121,6 @@ export function saveState() {
 
 // Clear state
 export function clearState() {
-  localStorage.removeItem(STORAGE_KEY);
+  safeRemove(STORAGE_KEY);
   Object.assign(state, defaultState());
 }
