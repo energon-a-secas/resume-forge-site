@@ -1,0 +1,145 @@
+# Resume Forge example: a sidebar layout for a frontend engineer. Skills as
+# bars, a timeline of roles, projects with links, contact block in the column.
+resume:
+  meta:
+    title: Frontend engineer (sidebar)
+  basics:
+    name: Tomás Ibarra
+    title: Senior Frontend Engineer
+    location: Valparaíso, Chile
+    email: tomas@example.com
+    phone: +56 9 5555 1234
+    website: https://tomas.example.dev
+    links:
+      - label: GitHub
+        url: https://github.com/tomasibarra
+      - label: LinkedIn
+        url: https://www.linkedin.com/in/tomasibarra
+      - label: Bluesky
+        url: https://bsky.app/profile/tomas.example.dev
+  sections:
+    - type: contact
+      title: Contact
+      zone: aside
+    - type: skills
+      title: Skills
+      zone: aside
+      style: bars
+      items:
+        - name: TypeScript
+          level: 5
+          group: Languages
+        - name: JavaScript
+          level: 5
+          group: Languages
+        - name: CSS
+          level: 4
+          group: Languages
+        - name: React
+          level: 5
+          group: Frameworks
+        - name: Svelte
+          level: 3
+          group: Frameworks
+        - name: Vite
+          level: 4
+          group: Tooling
+        - name: Playwright
+          level: 4
+          group: Tooling
+    - type: languages
+      title: Languages
+      zone: aside
+      style: dots
+      items:
+        - name: Spanish
+          level: Native
+          score: 5
+        - name: English
+          level: Professional
+          score: 4
+        - name: Portuguese
+          level: Basic
+          score: 2
+    - type: tags
+      title: Interests
+      zone: aside
+      items:
+        - name: Design systems
+        - name: Accessibility
+        - name: Typography
+        - name: Trail running
+    - type: text
+      title: Profile
+      zone: main
+      text: |-
+        Frontend engineer with nine years shipping products people use every day. I care about interfaces that stay fast and readable, design systems that teams actually adopt, and tests that catch regressions before users do.
+    - type: experience
+      title: Experience
+      zone: main
+      items:
+        - role: Senior Frontend Engineer
+          company: Fabrikam Health
+          location: Remote
+          start: Mar 2022
+          end: Present
+          summary: Owner of the patient portal, used by 400k people a month.
+          highlights:
+            - Rebuilt the booking flow as a design-system app; completion rate went from 61% to 78%.
+            - Introduced visual regression tests with Playwright; UI regressions reaching production dropped to zero over two quarters.
+            - Mentor two mid-level engineers; run the frontend guild.
+        - role: Frontend Engineer
+          company: Litware Commerce
+          location: Santiago, Chile
+          start: Jun 2018
+          end: Feb 2022
+          highlights:
+            - Migrated the storefront from a jQuery monolith to React, screen by screen, with no downtime.
+            - Cut the median Largest Contentful Paint from 4.1s to 1.6s on mid-range Android.
+        - role: Web Developer
+          company: Tailspin Agency
+          location: Valparaíso, Chile
+          start: 2016
+          end: 2018
+          highlights:
+            - Delivered twenty marketing sites on a shared component library.
+    - type: projects
+      title: Projects
+      zone: main
+      items:
+        - name: kbd-kit
+          role: Author
+          url: https://github.com/tomasibarra/kbd-kit
+          start: 2023
+          end: Present
+          summary: Accessible keyboard-shortcut registry for web apps, 1.2k stars.
+        - name: Valpo Transit Map
+          role: Maintainer
+          url: https://valpo.example.dev
+          summary: Live bus map for Valparaíso; 8k monthly users.
+    - type: education
+      title: Education
+      zone: main
+      items:
+        - degree: Ingeniería Civil en Informática
+          school: Universidad Técnica Federico Santa María
+          location: Valparaíso
+          start: 2011
+          end: 2016
+  design:
+    template: sidebar
+    palette: teal
+    fonts: clean
+    headings: bar
+    entries: timeline
+    icons: circles
+    bullet: •
+    skills: bars
+    links: both
+    photo:
+      shape: rounded
+      size: md
+      ring: false
+    columns:
+      side: left
+      width: 32

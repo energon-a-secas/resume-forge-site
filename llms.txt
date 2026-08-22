@@ -1,10 +1,10 @@
 # Resume Forge
 
-> Gaming-inspired resume builder with PSN/Steam stats and PDF export
+> CV builder, YAML in, PDF out: six templates, palettes and icon tiles, LinkedIn and JSON Resume import, local saves, vector PDF
 
 - Live: https://resume.neorgon.com/
 - Part of the Neorgon tool suite (free, no signup, runs in your browser): https://neorgon.com/
-- Keywords: resume, pdf, cloudflare-worker
+- Keywords: resume, yaml, pdf, linkedin, cloudflare-worker
 
 ## More Neorgon tools
 

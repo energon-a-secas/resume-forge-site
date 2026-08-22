@@ -1,0 +1,102 @@
+# Resume Forge example: classic single column for a first job or internship.
+# Parser-friendly: no columns, no band, tags for skills, everything in reading order.
+resume:
+  meta:
+    title: Student (classic)
+  basics:
+    name: Diego Paredes
+    title: Computer Science student, graduating 2027
+    location: Concepción, Chile
+    email: diego@example.com
+    phone: +56 9 8765 4321
+    links:
+      - label: GitHub
+        url: https://github.com/diegoparedes
+      - label: LinkedIn
+        url: https://www.linkedin.com/in/diegoparedes
+  sections:
+    - type: text
+      title: Objective
+      zone: main
+      text: |-
+        Third-year student looking for a backend internship for the 2027 summer. Comfortable with Python and Go, happiest when a test suite goes green.
+    - type: education
+      title: Education
+      zone: main
+      items:
+        - degree: Ingeniería Civil Informática
+          school: Universidad de Concepción
+          start: 2023
+          end: 2027 (expected)
+          score: GPA 6.2 / 7.0
+          notes: "Relevant courses: distributed systems, databases, operating systems, algorithms."
+    - type: projects
+      title: Projects
+      zone: main
+      items:
+        - name: bus-tracker
+          url: https://github.com/diegoparedes/bus-tracker
+          start: 2025
+          summary: Go service that ingests GTFS-realtime feeds and serves arrival estimates.
+          highlights:
+            - 99th percentile latency under 40 ms on a 5 USD VPS.
+            - 140 tests; CI on every push.
+        - name: notas
+          url: https://github.com/diegoparedes/notas
+          summary: A tiny Markdown notes CLI in Python, 300 downloads a month.
+    - type: experience
+      title: Experience
+      zone: main
+      items:
+        - role: Teaching Assistant, Algorithms
+          company: Universidad de Concepción
+          start: Mar 2025
+          end: Present
+          highlights:
+            - Weekly lab for 60 students; wrote the autograder.
+        - role: Volunteer Developer
+          company: Club de Robótica UdeC
+          start: 2024
+          end: Present
+          highlights:
+            - Built the registration site for the regional competition.
+    - type: skills
+      title: Skills
+      zone: aside
+      style: tags
+      items:
+        - name: Python
+        - name: Go
+        - name: SQL
+        - name: Git
+        - name: Linux
+        - name: Docker
+    - type: languages
+      title: Languages
+      zone: aside
+      items:
+        - name: Spanish
+          level: Native
+        - name: English
+          level: B2
+    - type: awards
+      title: Awards
+      zone: main
+      items:
+        - title: 2nd place, regional programming contest
+          issuer: ACM ICPC Chile
+          date: 2025
+  design:
+    template: classic
+    palette: ink
+    fonts: serif
+    headings: rule
+    entries: plain
+    bullet: •
+    skills: tags
+    links: both
+    photo:
+      shape: none
+      size: sm
+      ring: false
+    density: normal

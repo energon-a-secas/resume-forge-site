@@ -1,86 +1,40 @@
+// PSN and Steam stats through the site's Cloudflare Worker (worker/src/index.js).
+// The stats are cached inside the gaming section's data so the PDF never waits
+// on the network.
 import { showToast } from './utils.js';
 
 const WORKER_URL = 'https://resumeforge-api.neorgon.workers.dev';
 
-// Fetch PSN stats
+async function fetchJson(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
 export async function fetchPSNStats(username) {
-  if (!username) {
-    showToast('Please enter a PSN username');
-    return null;
-  }
-
+  if (!username) { showToast('Enter a PSN username first'); return null; }
   try {
-    showToast('Fetching PSN stats...');
-    const res = await fetch(`${WORKER_URL}/psn?username=${encodeURIComponent(username)}`);
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`);
-    }
-    const data = await res.json();
-    showToast('PSN stats loaded!');
+    showToast('Fetching PSN stats…');
+    const data = await fetchJson(`${WORKER_URL}/psn?username=${encodeURIComponent(username)}`);
+    showToast('PSN stats loaded');
     return data;
   } catch (err) {
-    console.error('Failed to fetch PSN stats:', err);
-    showToast('Failed to fetch PSN stats. Check username or try again.');
+    console.error('PSN fetch failed:', err);
+    showToast('Could not fetch PSN stats. Check the username or try later.');
     return null;
   }
 }
 
-// Fetch Steam stats
 export async function fetchSteamStats(steamId) {
-  if (!steamId) {
-    showToast('Please enter a Steam ID');
-    return null;
-  }
-
+  if (!steamId) { showToast('Enter a Steam ID first'); return null; }
   try {
-    showToast('Fetching Steam stats...');
-    const res = await fetch(`${WORKER_URL}/steam?id=${encodeURIComponent(steamId)}`);
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`);
-    }
-    const data = await res.json();
-    showToast('Steam stats loaded!');
+    showToast('Fetching Steam stats…');
+    const data = await fetchJson(`${WORKER_URL}/steam?id=${encodeURIComponent(steamId)}`);
+    showToast('Steam stats loaded');
     return data;
   } catch (err) {
-    console.error('Failed to fetch Steam stats:', err);
-    showToast('Failed to fetch Steam stats. Check Steam ID or try again.');
+    console.error('Steam fetch failed:', err);
+    showToast('Could not fetch Steam stats. Check the ID or try later.');
     return null;
   }
-}
-
-// Render PSN stats display
-export function renderPSNStats(stats) {
-  const container = document.getElementById('psnStats');
-  if (!stats) {
-    container.innerHTML = '';
-    container.classList.add('hidden');
-    return;
-  }
-
-  container.innerHTML = `
-    <h4>PSN Stats</h4>
-    <p><strong>Level:</strong> ${stats.level || 0}</p>
-    <p><strong>Total Games:</strong> ${stats.games || 0}</p>
-    <p><strong>Trophies:</strong> 🥇 ${stats.trophies?.platinum || 0} | 🥈 ${stats.trophies?.gold || 0} | 🥉 ${stats.trophies?.silver || 0} | 🏅 ${stats.trophies?.bronze || 0}</p>
-  `;
-  container.classList.remove('hidden');
-}
-
-// Render Steam stats display
-export function renderSteamStats(stats) {
-  const container = document.getElementById('steamStats');
-  if (!stats) {
-    container.innerHTML = '';
-    container.classList.add('hidden');
-    return;
-  }
-
-  const recentGames = stats.recentGames?.slice(0, 3).map(g => g.name).join(', ') || 'None';
-  container.innerHTML = `
-    <h4>Steam Stats</h4>
-    <p><strong>Total Games:</strong> ${stats.games || 0}</p>
-    <p><strong>Total Playtime:</strong> ${stats.playtime ? `${Math.round(stats.playtime)} hrs` : 'N/A'}</p>
-    <p><strong>Recent:</strong> ${recentGames}</p>
-  `;
-  container.classList.remove('hidden');
 }

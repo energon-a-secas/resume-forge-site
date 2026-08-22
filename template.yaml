@@ -1,0 +1,224 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Resume Forge: the annotated schema. Every key the site reads, with its
+# accepted values. Copy this file, delete what you do not need, paste it into
+# the YAML tab (or drop the file on the page). https://resume.neorgon.com/
+#
+# Validate offline:  node validate.mjs my.resume.yaml
+# Unknown values never break a file: the parser falls back to the default and
+# lists a warning. Dates are free text ("Sep 2025", "2020", "Present").
+# ─────────────────────────────────────────────────────────────────────────────
+resume:
+  meta:
+    title: My resume            # name in the saved list and the file name
+    lang: en                    # html lang of the sheet
+
+  basics:
+    name: Ada Reyes
+    title: Cloud Architect      # headline under the name
+    photo: ""                   # data: URI (the editor embeds uploads) or https URL
+    email: ada@example.com
+    phone: +56 9 1234 5678
+    location: Santiago, Chile
+    website: https://ada.example.com
+    links:                      # socials; render near the name and in a contact section
+      - label: LinkedIn
+        url: https://www.linkedin.com/in/ada-reyes
+        icon: linkedin          # optional: brand slug, glyph id, "favicon", data: URI or https image URL.
+                                # Empty = detected from the URL (github.com -> github, x.com -> x, ...).
+      - label: GitHub
+        url: https://github.com/adareyes
+
+  # Sections render in this order. zone puts one in the main column or the side
+  # column (aside); templates without a side column render aside sections inline.
+  sections:
+    - type: text                # paragraphs; **bold**, *italic*, [link](https://...)
+      title: Profile
+      zone: main
+      style: paragraphs         # paragraphs | quote | compact
+      text: |-
+        One or two short paragraphs. A blank line starts a new one.
+
+    - type: experience
+      title: Experience
+      zone: main
+      items:
+        - role: Reporting Tech Lead
+          company: Northwind Media
+          team: Professional Services   # optional, rendered as company > team
+          location: Santiago, Chile
+          start: Sep 2025
+          end: Present
+          url: ""                       # optional link on the company
+          summary: One line on the role.
+          highlights:
+            - A bullet.
+            - Another bullet.
+
+    - type: education
+      title: Education
+      zone: main
+      items:
+        - degree: B.S. Computer Science
+          school: University of Chile
+          field: Computer Science       # optional
+          location: Santiago
+          start: 2014
+          end: 2018
+          score: GPA 6.5 / 7            # optional
+          url: ""
+          notes: Thesis, honours, courses.
+
+    - type: skills
+      title: Skills
+      zone: aside
+      style: tags                 # tags | bars | dots | hearts | list | grid (empty = design.skills)
+      columns: 1                  # optional 1 to 3, for list-like styles
+      items:
+        - name: Kubernetes
+          level: 5                # 0 hides the level, 1 to 5
+          group: Platform         # optional; items are grouped under a small label
+
+    - type: languages
+      title: Languages
+      zone: aside
+      style: list                 # list | bars | dots | tags
+      items:
+        - name: Spanish
+          level: Native           # free text
+          score: 5                # optional 0 to 5, used by bars and dots
+
+    - type: certifications
+      title: Certifications
+      zone: aside
+      items:
+        - name: AWS Solutions Architect
+          issuer: Amazon
+          date: 2023
+          url: https://www.credly.com/...
+          id: ABC-123
+
+    - type: projects
+      title: Projects
+      zone: main
+      items:
+        - name: Neorgon
+          role: Creator
+          start: 2026
+          end: Present
+          url: https://neorgon.com
+          summary: What it is.
+          highlights:
+            - Why it matters.
+
+    - type: awards
+      title: Awards
+      zone: main
+      items:
+        - title: Engineer of the year
+          issuer: Northwind
+          date: 2024
+          summary: What it was for.
+
+    - type: volunteer
+      title: Volunteering
+      zone: main
+      items:
+        - role: Mentor
+          org: Code Club
+          location: Remote
+          start: 2022
+          end: Present
+          url: ""
+          summary: ""
+          highlights: []
+
+    - type: publications
+      title: Publications
+      zone: main
+      items:
+        - title: Title
+          publisher: Medium
+          date: Mar 2025
+          url: https://...
+          summary: ""
+
+    - type: iconrow               # a row of icon tiles: socials, trophies, hobbies, tools
+      title: Socials
+      zone: aside
+      style: tiles                # tiles | circles | outline | plain | list (empty = design.icons)
+      items:
+        - label: GitHub
+          icon: github            # brand slug or glyph id; empty = detected from url
+          url: https://github.com/adareyes
+        - label: Photography      # no url: just the tile
+          icon: camera
+
+    - type: list                  # short facts, optionally with icons and a picture
+      title: Trivia
+      zone: aside
+      style: bullets              # bullets | check | plain | card
+      image: ""                   # optional data: URI or URL, shown beside the list
+      items:
+        - text: Chilean, based in Santiago
+          icon: pin
+
+    - type: tags
+      title: Interests
+      zone: aside
+      items:
+        - name: Photography
+        - name: Board games
+
+    - type: contact               # email, phone, location, website and links from basics
+      title: Contact
+      zone: aside
+
+    - type: references
+      title: References
+      zone: main
+      items:
+        - name: Jane Smith
+          role: Engineering Manager, Acme
+          contact: jane@acme.example
+          text: Optional quote.
+
+    - type: gaming                # PSN / Steam stats through the site's worker
+      title: Gaming
+      zone: aside
+      data:
+        psn:
+          username: ""
+        steam:
+          id: ""
+
+    # Any section also accepts:  hidden: true   (kept in the file, not rendered)
+
+  design:
+    template: banner            # banner | sidebar | split | classic | stripe | cards
+    palette: navy               # navy | slate | graphite | ink | ocean | teal | forest | burgundy | violet | amber | rose | sand | mist
+    colors: {}                  # optional overrides: band, bandText, accent, tile, heading, text, muted, rule, page, card (hex)
+    fonts: modern               # modern | clean | classic | humanist | serif | grotesk | editorial | mono | arcade | marker
+                                # or an object: { heading: Montserrat, body: DM Sans } (Google Fonts family names)
+    fontScale: 1                # 0.8 to 1.2
+    density: normal             # compact | normal | relaxed
+    page: A4                    # A4 | Letter
+    headings: pill              # pill | bar | rule | caps | plain
+    entries: plain              # plain | timeline | cards   (experience, education, projects, volunteer)
+    bullet: ✦                   # glyph before highlights
+    skills: tags                # default style for skills sections
+    links: icons                # icons | text | both   (basics.links near the name)
+    icons: tiles                # default style for icon rows: tiles | circles | outline | plain
+    photo:
+      shape: circle             # circle | rounded | square | squircle | hex | none
+      size: md                  # sm | md | lg
+      ring: true
+      ringColor: ""             # hex; empty = automatic
+    banner:                     # banner template only
+      shape: flat               # flat | slant | curve | rounded | none
+      height: normal            # short | normal | tall
+      pattern: none             # none | dots | grid | diagonal | blueprint
+      image: ""                 # data: URI or URL behind the banner
+      dim: 45                   # 0 to 90, darkens the image
+    columns:
+      side: left                # side column position: left | right
+      width: 34                 # 24 to 45, percent of the page

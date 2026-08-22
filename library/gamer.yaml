@@ -1,0 +1,104 @@
+# Resume Forge example: the stripe template with the arcade font pairing,
+# heart-rated skills and a gaming-stats section. Keeps the v1 spirit alive.
+resume:
+  meta:
+    title: Game community manager (stripe)
+  basics:
+    name: Rin Okabe
+    title: Community Manager, Games
+    location: Osaka, Japan
+    email: rin@example.com
+    website: https://rin.example.gg
+    links:
+      - label: X
+        url: https://x.com/rinplays
+      - label: Twitch
+        url: https://twitch.tv/rinplays
+      - label: YouTube
+        url: https://youtube.com/@rinplays
+      - label: Discord
+        url: https://discord.gg/rinplays
+  sections:
+    - type: text
+      title: Profile
+      zone: main
+      text: |-
+        I grow and moderate player communities: 200k-member Discord, weekly streams, patch-note comms, and the bridge between players and the dev team. Calm in a flame war, fast on a bug triage.
+    - type: experience
+      title: Experience
+      zone: main
+      items:
+        - role: Community Manager
+          company: Hoshi Games
+          start: 2023
+          end: Present
+          highlights:
+            - Grew the official Discord from 40k to 210k members; moderation team of 25 volunteers.
+            - Run the weekly dev stream (avg 6k concurrent viewers).
+            - Own the player-feedback pipeline into Jira; 1,400 reports triaged last year.
+        - role: Support Lead
+          company: Kitsune Interactive
+          start: 2020
+          end: 2023
+          highlights:
+            - Cut first-response time from 30 hours to 4.
+    - type: skills
+      title: Skills
+      zone: aside
+      style: hearts
+      items:
+        - name: Community moderation
+          level: 5
+        - name: Streaming (OBS)
+          level: 4
+        - name: Discord bots
+          level: 3
+        - name: Japanese / English comms
+          level: 5
+    - type: gaming
+      title: Gaming stats
+      zone: aside
+      data:
+        psn:
+          username: rinplays
+        steam:
+          id: "76561198000000000"
+    - type: iconrow
+      title: Platforms
+      zone: aside
+      style: outline
+      items:
+        - label: PlayStation
+          icon: playstation
+        - label: Nintendo Switch
+          icon: nintendoswitch
+        - label: Steam
+          icon: steam
+        - label: Xbox
+          icon: xbox
+    - type: languages
+      title: Languages
+      zone: aside
+      items:
+        - name: Japanese
+          level: Native
+        - name: English
+          level: Fluent
+  design:
+    template: stripe
+    palette: violet
+    fonts: arcade
+    headings: caps
+    entries: cards
+    icons: outline
+    bullet: ▸
+    skills: hearts
+    links: icons
+    photo:
+      shape: hex
+      size: md
+      ring: false
+    columns:
+      side: left
+      width: 34
+    fontScale: 0.95

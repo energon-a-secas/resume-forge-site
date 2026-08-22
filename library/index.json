@@ -1,0 +1,20 @@
+[
+  { "id": "cloud-architect",   "category": "Engineering", "name": "Cloud architect",
+    "desc": "The reference layout: banner with a pattern, photo over the band, pill headings, icon tiles for socials and hobbies, a trivia card, roles as company > team (dates) with bullets.",
+    "uses": "banner · navy · pill headings · icon tiles · list card" },
+  { "id": "frontend-engineer", "category": "Engineering", "name": "Frontend engineer",
+    "desc": "A coloured side column with contact, grouped skill bars and language dots; roles on a timeline; projects with links.",
+    "uses": "sidebar · teal · bar headings · timeline · skill bars" },
+  { "id": "product-manager",   "category": "Product",     "name": "Product manager",
+    "desc": "Light split header, serif pairing, caps headings, the quiet one. Column on the right with credentials and education.",
+    "uses": "split · slate · caps headings · classic fonts · right column" },
+  { "id": "designer",          "category": "Design",      "name": "Product designer",
+    "desc": "Every section in a soft card on a tinted page; a rounded band header with the photo; tool icons.",
+    "uses": "cards · amber · humanist fonts · squircle photo" },
+  { "id": "student",           "category": "Early career","name": "Student",
+    "desc": "One column, no band, rules between sections: the most parser-friendly shape for a first job or internship.",
+    "uses": "classic · ink · serif · tags" },
+  { "id": "gamer",             "category": "Games",       "name": "Community manager",
+    "desc": "Accent stripe, arcade heading font, heart-rated skills, outline platform icons and a gaming-stats section.",
+    "uses": "stripe · violet · arcade · hearts · gaming stats" }
+]

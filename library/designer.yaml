@@ -1,0 +1,127 @@
+# Resume Forge example: the cards template with a warm palette, icon tiles for
+# tools, a photo in the header card, and a plain-text references line.
+resume:
+  meta:
+    title: Product designer (cards)
+  basics:
+    name: Noa Lindqvist
+    title: Product Designer
+    location: Stockholm, Sweden
+    email: noa@example.com
+    website: https://noa.example.design
+    links:
+      - label: Portfolio
+        url: https://noa.example.design
+        icon: globe
+      - label: Dribbble
+        url: https://dribbble.com/noalindqvist
+      - label: LinkedIn
+        url: https://www.linkedin.com/in/noalindqvist
+      - label: Instagram
+        url: https://instagram.com/noa.designs
+  sections:
+    - type: text
+      title: About
+      zone: main
+      text: |-
+        I design calm software. Seven years across fintech and health, from early discovery to a shipped design system used by forty engineers. I sketch first, prototype second, and write the copy myself.
+    - type: experience
+      title: Experience
+      zone: main
+      items:
+        - role: Lead Product Designer
+          company: Lucerne Health
+          location: Stockholm
+          start: 2022
+          end: Present
+          highlights:
+            - Built "Nordlys", the design system now behind every Lucerne product.
+            - Redesigned the care-plan flow with clinicians; task time fell 40% in usability tests.
+        - role: Product Designer
+          company: Fjord Pay
+          location: Oslo
+          start: 2019
+          end: 2022
+          highlights:
+            - Shipped the onboarding that took the app to 4.7 stars.
+            - Ran weekly research sessions; recruited from a 600-person panel.
+        - role: Visual Designer
+          company: Studio Brisk
+          start: 2017
+          end: 2019
+    - type: projects
+      title: Selected work
+      zone: main
+      items:
+        - name: Nordlys design system
+          url: https://noa.example.design/nordlys
+          summary: 120 components, tokens, docs, and a Figma library kept in sync with code.
+        - name: Fjord Pay onboarding
+          url: https://noa.example.design/fjord
+          summary: Case study, from research to metrics.
+    - type: iconrow
+      title: Tools
+      zone: aside
+      items:
+        - label: Figma
+          icon: figma
+        - label: Notion
+          icon: notion
+        - label: Obsidian
+          icon: obsidian
+        - label: Sketching
+          icon: pen
+        - label: Photography
+          icon: camera
+    - type: skills
+      title: Skills
+      zone: aside
+      style: tags
+      items:
+        - name: Interaction design
+        - name: Design systems
+        - name: User research
+        - name: Prototyping
+        - name: UX writing
+        - name: Accessibility
+    - type: languages
+      title: Languages
+      zone: aside
+      items:
+        - name: Swedish
+          level: Native
+        - name: English
+          level: Fluent
+        - name: Spanish
+          level: Conversational
+    - type: education
+      title: Education
+      zone: aside
+      items:
+        - degree: BFA Interaction Design
+          school: Konstfack
+          location: Stockholm
+          start: 2013
+          end: 2017
+    - type: references
+      title: References
+      zone: aside
+      items:
+        - name: Available on request
+  design:
+    template: cards
+    palette: amber
+    fonts: humanist
+    headings: plain
+    entries: plain
+    icons: tiles
+    bullet: ✦
+    skills: tags
+    links: icons
+    photo:
+      shape: squircle
+      size: md
+      ring: true
+    columns:
+      side: right
+      width: 34

@@ -1,104 +1,48 @@
-import { showToast } from './utils.js';
+// Images the resume carries: photo, banner background, uploaded icons, list
+// pictures. They live inside the YAML as data: URIs, so they are resized here
+// before storage: a 4 MB phone photo would exhaust localStorage on its own.
+import { readAsDataUrl } from './utils.js';
 
-// Upload image and convert to base64
-export function uploadImage(file) {
-  return new Promise((resolve, reject) => {
-    if (!file) {
-      reject(new Error('No file provided'));
-      return;
-    }
+const KB = 1024;
 
-    // Check file size (max 2MB per image)
-    if (file.size > 2 * 1024 * 1024) {
-      showToast('Image too large. Please use images under 2MB.');
-      reject(new Error('File too large'));
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result); // base64
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+/**
+ * @param {File} file
+ * @param {{max?:number, quality?:number, keepSvg?:boolean, maxBytes?:number}} o
+ *   max: longest side in px after resize; keepSvg: leave SVG files untouched (icons)
+ */
+export async function imageToDataUrl(file, o = {}) {
+  const { max = 1200, quality = 0.86, keepSvg = true, maxBytes = 900 * KB } = o;
+  if (!file || !file.type.startsWith('image/')) throw new Error('Not an image file');
+  if (file.type === 'image/svg+xml') {
+    if (!keepSvg) throw new Error('SVG is not accepted here');
+    if (file.size > 200 * KB) throw new Error('SVG over 200 KB; simplify it first');
+    return readAsDataUrl(file);
+  }
+  const src = await readAsDataUrl(file);
+  const img = await loadImage(src);
+  const scale = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+  if (scale === 1 && file.size <= maxBytes) return src;
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+  canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+  canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+  const hasAlpha = file.type === 'image/png' || file.type === 'image/webp';
+  let out = canvas.toDataURL(hasAlpha ? 'image/png' : 'image/jpeg', quality);
+  if (hasAlpha && out.length > maxBytes * 1.37) out = canvas.toDataURL('image/jpeg', quality);
+  return out;
 }
 
-// Preload profile image for canvas rendering
-export function preloadProfileImage(base64) {
-  if (!base64) {
-    window._loadedProfileImage = null;
-    return Promise.resolve();
-  }
-
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-
-    img.onload = () => {
-      window._loadedProfileImage = img;
-      console.log('✓ Image preloaded:', img.width, 'x', img.height);
-      resolve(img);
-    };
-
-    img.onerror = (err) => {
-      console.error('✗ Image load error:', err);
-      showToast('Failed to load image');
-      window._loadedProfileImage = null;
-      reject(new Error('Image load failed'));
-    };
-
-    img.src = base64;
-  });
-}
-
-// Show image preview
-export function showImagePreview(containerId, base64) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-
-  container.innerHTML = '';
-  if (base64) {
-    const img = document.createElement('img');
-    img.src = base64;
-    container.appendChild(img);
-    container.classList.remove('hidden');
-  } else {
-    container.classList.add('hidden');
-  }
-}
-
-// Preload background image for canvas rendering
-export function preloadBgImage(base64) {
-  if (!base64) {
-    window._loadedBgImage = null;
-    return Promise.resolve();
-  }
-
+function loadImage(src) {
   return new Promise((resolve, reject) => {
     const img = new Image();
-
-    img.onload = () => {
-      window._loadedBgImage = img;
-      console.log('✓ BG image preloaded:', img.width, 'x', img.height);
-      resolve(img);
-    };
-
-    img.onerror = (err) => {
-      console.error('✗ BG image load error:', err);
-      showToast('Failed to load background image');
-      window._loadedBgImage = null;
-      reject(new Error('BG image load failed'));
-    };
-
-    img.src = base64;
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('Image failed to decode'));
+    img.src = src;
   });
 }
 
-// Clear all assets
-export function clearAllAssets(state) {
-  state.assets.profilePhoto = '';
-  state.assets.bgImage = '';
-  window._loadedProfileImage = null;
-  window._loadedBgImage = null;
-  showImagePreview('profilePhotoPreview', '');
-  showImagePreview('bgImagePreview', '');
-  showToast('All assets cleared');
+/** Approximate bytes of a data: URI payload, for the storage readout. */
+export function dataUrlBytes(uri) {
+  const i = String(uri || '').indexOf(',');
+  return i < 0 ? 0 : Math.round((uri.length - i - 1) * 0.75);
 }

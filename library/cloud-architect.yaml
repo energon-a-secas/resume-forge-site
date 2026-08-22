@@ -1,0 +1,145 @@
+# Resume Forge example: the reference layout. Banner with a background image,
+# photo overlapping the band, icon tiles in the side column, trivia card,
+# experience as role + "company > team (dates)" + bullets, prose side projects.
+resume:
+  meta:
+    title: Cloud architect (banner)
+  basics:
+    name: Ada Reyes
+    title: Cloud Architect
+    location: Santiago, Chile
+    email: ada@example.com
+    website: https://ada.example.com
+    links:
+      - label: LinkedIn
+        url: https://www.linkedin.com/in/ada-reyes
+      - label: GitHub
+        url: https://github.com/adareyes
+      - label: Medium
+        url: https://medium.com/@adareyes
+  sections:
+    - type: text
+      title: Profile
+      zone: main
+      text: |-
+        Building reliable cloud platforms that enable engineering teams to move faster.
+
+        Focused on platform design using AWS, EKS, GitLab, Infrastructure as Code, and whatever else is needed along the way.
+
+        Currently in a more data-driven phase, analysing systems from the top down to improve how we work and keep things interesting.
+    - type: experience
+      title: Recent experience
+      zone: main
+      items:
+        - role: Reporting Tech Lead
+          company: Northwind Media
+          team: Professional Services
+          start: Sep 2025
+          end: Present
+          highlights:
+            - Designed and implemented internal reporting solutions using Airtable.
+            - Improved operational visibility across teams through structured reporting workflows.
+            - Act as fleet lead, coordinating priorities and supporting engineers across teams.
+        - role: Infrastructure Fleet Lead
+          company: Northwind Media
+          team: Content Platforms
+          start: Apr 2022
+          end: Sep 2025
+          highlights:
+            - Led infrastructure initiatives across multiple engineering squads, ensuring platform stability and delivery velocity.
+            - Defined and reviewed cloud architecture and infrastructure implementations, guiding AWS best practices.
+            - Coordinated cross-team priorities and resolved complex technical blockers across platform teams.
+            - Designed scalable infrastructure standards and documentation patterns adopted across teams.
+            - Mentored engineers and improved onboarding through structured knowledge sharing and documentation.
+        - role: Cloud Engineer
+          company: Contoso Studios
+          team: Media Supply Chain
+          start: Aug 2020
+          end: Apr 2022
+          highlights:
+            - Migrated the render farm to spot-backed EKS node groups, cutting compute cost by a third.
+    - type: text
+      title: Side projects
+      zone: main
+      text: |-
+        I have been making YouTube videos for a little over a year, which led me to publish a few [n8n](https://n8n.io) templates to automate parts of the workflow.
+
+        More recently I built a set of small browser tools from a wishlist I had carried for four years, and grouped them under one hub in two weeks.
+    - type: iconrow
+      title: Socials
+      zone: aside
+      items:
+        - label: Website
+          url: https://ada.example.com
+          icon: globe
+        - label: Mastodon
+          url: https://mastodon.social/@adareyes
+        - label: GitHub
+          url: https://github.com/adareyes
+        - label: Medium
+          url: https://medium.com/@adareyes
+        - label: LinkedIn
+          url: https://www.linkedin.com/in/ada-reyes
+    - type: iconrow
+      title: Trophies
+      zone: aside
+      items:
+        - label: Credly
+          url: https://www.credly.com/users/adareyes
+        - label: PlayStation
+          icon: playstation
+        - label: Steam
+          url: https://steamcommunity.com/id/adareyes
+    - type: iconrow
+      title: Main hobbies
+      zone: aside
+      items:
+        - label: Photography
+          icon: camera
+        - label: Anime
+          icon: myanimelist
+        - label: Games
+          icon: gamepad
+        - label: Tabletop
+          icon: dice
+        - label: Coffee
+          icon: coffee
+    - type: iconrow
+      title: Secondary hobbies
+      zone: aside
+      items:
+        - label: Writing
+          icon: pen
+        - label: Music
+          icon: music
+        - label: Cycling
+          icon: bike
+        - label: Cooking
+          icon: utensils
+    - type: list
+      title: Trivia
+      zone: aside
+      items:
+        - text: Chilean, based in Santiago
+          icon: pin
+        - text: "Age: 349 months"
+        - text: Learned English because the memes were better in English
+        - text: Staycations are the best, second only to remote work
+  design:
+    template: banner
+    palette: navy
+    fonts: modern
+    headings: pill
+    icons: tiles
+    bullet: ✦
+    photo:
+      shape: circle
+      size: lg
+      ring: true
+    banner:
+      shape: flat
+      height: normal
+      pattern: blueprint
+    columns:
+      side: left
+      width: 36

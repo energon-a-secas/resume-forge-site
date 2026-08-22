@@ -2,7 +2,7 @@
 
 # Resume Forge
 
-Build gaming-inspired resumes with live stats
+CV builder: YAML in, PDF out
 
 [![Live][badge-site]][url-site]
 [![HTML5][badge-html]][url-html]
@@ -33,7 +33,11 @@ Build gaming-inspired resumes with live stats
 
 ## Overview
 
-Resume Forge is a gaming-inspired resume builder for tech and gaming professionals. Create visually striking resumes with heart-rated skills, live PSN trophies, Steam stats, and custom layouts. Export as PDF with one click.
+Resume Forge treats a CV as **data**: one YAML document (or JSON, JSON Resume, Markdown, or
+your LinkedIn export) rendered through templates you can switch at any time. Six layouts,
+thirteen palettes, ten font pairings, banner and photo shapes, icon tiles for socials and
+hobbies, and a vector PDF with selectable text and working links. Everything runs in the
+browser; saves live in the browser's storage.
 
 **Live:** resume.neorgon.com
 
@@ -41,40 +45,49 @@ Resume Forge is a gaming-inspired resume builder for tech and gaming professiona
 
 ## Features
 
-- **Live Gaming Stats** — Auto-fetch PSN trophies and Steam playtime
-- **Heart-Rated Skills** — 5-heart rating system for visual skill display
-- **Full Layout Control** — Customize column position, width, colors, backgrounds
-- **Google Fonts** — Creative typography with gaming/retro fonts
-- **PDF Export** — One-click export with jsPDF
-- **Asset Uploads** — Add profile photos and custom backgrounds (localStorage)
-- **Zero Build** — Pure ES modules, no compile step
+- **Templates**: banner (the reference layout: band with a pattern or photo, circle portrait over the edge, pill headings), sidebar, split, classic (single column, parser-friendly), stripe, cards. Switching keeps every word.
+- **Sections as data**: experience, education, skills (tags, bars, dots, hearts, list, grid), languages, certifications, projects, awards, volunteering, publications, icon rows (socials, trophies, hobbies, tools), lists with a picture, tags, contact, references, gaming stats. Reorder, move between the main and side column, hide, delete.
+- **Icons three ways**: 101 brand marks from Simple Icons vendored and recoloured by the palette, 56 drawn glyphs, the link's favicon, or an uploaded file (SVG or PNG, e.g. from freeicons.io) kept as a data URI.
+- **Design**: palette, colour overrides, font pairing or any two Google Fonts, density, paper size, heading style, entry style (plain, timeline, cards), bullet glyph, photo shape and ring, banner shape, height, pattern and background image, column side and width.
+- **Catalog**: templates rendered with your own data, six complete example resumes, every section type with a live sample, the design controls.
+- **Formats**: import and export YAML (canonical, see `template.yaml`), JSON, JSON Resume, Markdown (readable, llms.txt style, round-trips), standalone HTML; import LinkedIn's data-export ZIP or CSVs; export PDF through the print dialog.
+- **Local saves**: named resumes in this browser, working copy autosaved, v1 data migrated.
+- **Zero build**: plain ES modules, no compile step. `npm install` only for the node tests.
+
+---
+
+## Formats
+
+| Format | In | Out | Notes |
+|---|---|---|---|
+| YAML | yes | yes | The canonical file. Root key `resume:`; every key is annotated in [`template.yaml`](template.yaml). |
+| JSON | yes | yes | The same tree. |
+| JSON Resume | yes | yes | jsonresume.org schema. Dates convert to `YYYY-MM`; a team rides as `Company (Team)` in `work[].name`. A JSON Resume pasted into the JSON importer is recognised by shape. |
+| Markdown | yes | yes | `# Name`, `**Title**`, a contact line, `## Section <!-- type zone -->`, `### Entry` with a `Company (Team) · Location · Sep 2025 - Present · https://url` line and `- bullets`. Markers are optional: a hand-written file is classified by heading words. |
+| LinkedIn export | yes | no | Settings > Data privacy > Get a copy of your data. Drop the ZIP, or pick the CSVs. Profile, Positions, Education, Skills, Languages, Certifications, Projects, Honors, Email Addresses, PhoneNumbers, Volunteering, Publications, Courses, Organizations are mapped; headers match by name with synonyms. |
+| HTML | no | yes | One self-contained page with the sheet CSS inlined. |
+| PDF | no | yes | Browser print pipeline: vector text, links, pagination. Choose "Save as PDF", no margins, background graphics on. |
+
+Validate or convert a file without the site:
+
+```bash
+npm install                          # once: js-yaml
+node validate.mjs my.resume.yaml     # lint; exit 1 on warnings
+node validate.mjs --print md my.resume.yaml > my.resume.md
+```
 
 ---
 
 ## Running locally
 
-**Frontend:**
-
-ES modules require an HTTP server (not `file://`):
-
 ```bash
-make serve
+make serve      # http://localhost:8822
+npm test        # node tests: round-trips, JSON Resume, LinkedIn fixture, v1 migration
 ```
 
-Or manually:
+ES modules require an HTTP server, `file://` will not work.
 
-```bash
-python3 -m http.server 8822
-```
-
-**Worker (optional):**
-
-```bash
-cd worker
-wrangler dev
-```
-
-The worker is already deployed at `resumeforge-api.neorgon.workers.dev` for production use.
+**Worker (optional, gaming stats):** `cd worker && wrangler dev`. Deployed at `resumeforge-api.neorgon.workers.dev`.
 
 ---
 
@@ -82,76 +95,63 @@ The worker is already deployed at `resumeforge-api.neorgon.workers.dev` for prod
 
 ```mermaid
 flowchart TB
-    User([User]) --> HTML["index.html\nApp shell"]
+    User([User]) --> HTML["index.html\nshell: toolbar, editor, preview, catalog"]
 
-    subgraph Frontend["Frontend (ES Modules)"]
-        HTML --> app["app.js\nEntry point"]
-        app --> state["state.js\nResume data + layout config"]
-        app --> render["render.js\nCanvas preview rendering"]
-        app --> events["events.js\nForm inputs + export triggers"]
-        app --> editor["editor.js\nContent editor panels"]
-        app --> layout["layout.js\nColumn customization"]
-        app --> gaming["gaming.js\nPSN/Steam API client"]
-        app --> assets["assets.js\nImage upload + base64"]
-        app --> fonts["fonts.js\nGoogle Fonts loader"]
-        app --> export["export.js\nPDF export (jsPDF)"]
-        app --> utils["utils.js\nHelpers"]
+    subgraph Data["Model (js/)"]
+        schema["schema.js\nSECTION_TYPES, normalize, lint, migrateV1"]
+        design["design.js\npalettes, fonts, templates, shapes"]
+        serialize["serialize.js\nYAML, JSON, JSON Resume"]
+        markdown["markdown.js\nMarkdown in/out"]
+        linkedin["linkedin.js\nCSV, LinkedIn export"]
     end
 
-    state <-->|"resume-forge-v1"| Storage[("localStorage")]
-
-    subgraph CF["Cloudflare Worker"]
-        Worker["resumeforge-api\nScraper proxy"]
-        PSN["PSN Profiles\npsnprofiles.com"]
-        Steam["SteamDB Calculator\nsteamdb.info"]
+    subgraph UI["Views (js/)"]
+        state["state.js\nstate, bus, saves"]
+        editor["editor.js + design-panel.js\nschema-driven forms"]
+        catalog["catalog.js\ntemplates, examples, sections, design"]
+        preview["preview.js\nscale, page guides, lint"]
+        events["events.js\ndata-act routing"]
+        exporter["export.js\nexportAs, importFiles"]
     end
 
-    gaming -->|"GET /psn?username=X"| Worker
-    gaming -->|"GET /steam?id=Y"| Worker
-    Worker -->|"scrape HTML"| PSN
-    Worker -->|"scrape HTML"| Steam
-    PSN -->|"trophy stats"| Worker
-    Steam -->|"game stats"| Worker
-    Worker -->|"JSON response"| gaming
+    render["render.js\nrenderResume(model) -> HTML"]
+    icons["icons.js + brand-icons.js\nglyphs, Simple Icons, favicons"]
+    sheetcss["css/resume.css\ntemplates, palettes, print"]
 
-    export -->|"canvas.toDataURL()"| PDF["jsPDF CDN\njspdf.umd.min.js"]
+    HTML --> state --> events
+    events --> editor & catalog & preview & exporter
+    editor & catalog & preview --> render
+    render --> icons
+    render --> sheetcss
+    exporter --> serialize & markdown & linkedin
+    serialize & markdown & linkedin --> schema
+    render --> design
+    state <-->|"resume-forge-v2:*"| Storage[("localStorage")]
+    exporter -->|"window.print() on #print-root"| PDF["PDF"]
+    exporter -->|"files"| Files["YAML · JSON · JSON Resume · MD · HTML"]
+    Worker["Cloudflare Worker\nPSN / Steam"] -.-> events
 ```
 
 **Directory structure:**
 
 ```
 resume-forge-site/
-├── index.html                 # HTML shell
+├── index.html               # shell
+├── template.yaml            # annotated schema, every key
+├── validate.mjs             # CLI: lint or convert a file with the site's own parser
 ├── css/
-│   └── style.css              # All styles
-├── js/
-│   ├── app.js                 # Entry point (<50 lines)
-│   ├── state.js               # Shared state + localStorage
-│   ├── render.js              # Canvas rendering
-│   ├── events.js              # Event handlers
-│   ├── editor.js              # Editor panels (experience, skills, etc.)
-│   ├── layout.js              # Column customization
-│   ├── gaming.js              # PSN/Steam integration
-│   ├── assets.js              # Image upload, base64
-│   ├── fonts.js               # Google Fonts loader
-│   ├── export.js              # PDF export (jsPDF)
-│   ├── data.js                # Default templates
-│   └── utils.js               # Helpers
-├── worker/
-│   ├── wrangler.toml          # Cloudflare Worker config
-│   └── src/
-│       └── index.js           # PSN/Steam scraper proxy
-├── docs/
-│   ├── architecture.mmd       # Mermaid source
-│   └── architecture.svg       # Generated diagram
-├── favicon.ico
-├── energon-classic-logo.png
-├── robots.txt
-├── sitemap.xml
-├── CNAME
-├── Makefile
-└── README.md
+│   ├── style.css            # app chrome
+│   └── resume.css           # the sheet (self-contained; inlined into the HTML export)
+├── js/                      # ES modules, see CLAUDE.md for the module table
+├── library/                 # example resumes (real YAML) + index.json
+├── assets/icons/brands/     # vendored Simple Icons SVGs (CC0) -> js/brand-icons.js
+├── tools/build-icons.mjs    # regenerates js/brand-icons.js
+├── tests/                   # node --test
+├── worker/                  # Cloudflare Worker: PSN/Steam proxy
+└── docs/architecture.mmd    # Mermaid source for the diagram above
 ```
+
+Brand icons are from [Simple Icons](https://simpleicons.org/) (CC0 1.0); brand marks belong to their owners. Favicons come from Google's favicon service only when a link asks for one.
 
 ---
 

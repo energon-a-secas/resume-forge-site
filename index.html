@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline' https://esm.sh cdn.jsdelivr.net cdnjs.cloudflare.com https://challenges.cloudflare.com https://gc.zgo.at https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.neorgon.org; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.convex.cloud https://img.clerk.com https://cdn.neorgon.org https://i.ytimg.com https://yt3.ggpht.com https://neorgon.goatcounter.com; connect-src 'self' https://*.convex.cloud https://*.clerk.accounts.dev https://*.accounts.dev https://clerk-telemetry.com https://api.clerk.com https://challenges.cloudflare.com https://*.workers.dev https://neorgon.goatcounter.com https://cloudflareinsights.com; frame-src 'self' https://challenges.cloudflare.com https://*.clerk.accounts.dev https://*.accounts.dev https://www.youtube.com https://www.youtube-nocookie.com; worker-src 'self' blob:">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline' cdnjs.cloudflare.com https://gc.zgo.at https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.neorgon.org; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' blob: https://*.workers.dev https://neorgon.goatcounter.com https://cloudflareinsights.com; frame-src 'none'; worker-src 'self' blob:">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
-  <title>Resume Forge | Build Gaming Resumes</title>
-  <meta name="description" content="Create tech and gaming resumes with heart-rated skills, PSN trophies, Steam stats, and custom visual themes. Export as PDF">
-  <meta property="og:title" content="Resume Forge: Build Gaming Resumes">
-  <meta property="og:description" content="Create tech and gaming resumes with live gaming stats and custom themes">
+  <title>Resume Forge | CV builder: YAML in, PDF out</title>
+  <meta name="description" content="Build a CV from YAML, Markdown, JSON Resume or your LinkedIn export. Six templates, palettes, icon tiles, banner photo, local saves, vector PDF">
+  <meta property="og:title" content="Resume Forge: CV builder, YAML in, PDF out">
+  <meta property="og:description" content="Six templates, palettes and shapes, icon tiles for socials, LinkedIn import, vector PDF. Everything stays in your browser">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://resume.neorgon.com/">
   <meta property="og:site_name" content="Neorgon">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Resume Forge: Build Gaming Resumes">
-  <meta name="twitter:description" content="Create tech and gaming resumes with live gaming stats and custom themes">
+  <meta name="twitter:title" content="Resume Forge: CV builder, YAML in, PDF out">
+  <meta name="twitter:description" content="Six templates, palettes and shapes, icon tiles for socials, LinkedIn import, vector PDF. Everything stays in your browser">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://resume.neorgon.com/">
   <meta property="og:locale" content="en_US">
@@ -24,9 +24,13 @@
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:image" content="https://resume.neorgon.com/og-preview.jpg">
+  <meta name="neo-repo" content="https://github.com/energon-a-secas/resume-forge-site">
+  <meta name="neo-version" content="2.0.0">
+  <meta name="neo-updated" content="2026-08">
   <link rel="icon" type="image/x-icon" href="https://cdn.neorgon.org/v1.0.0/favicon.ico" />
   <link rel="stylesheet" href="https://cdn.neorgon.org/v1.0.0/styles/base.css">
-    <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/resume.css">
   <!-- Neorgon Header Kit (vendored; ?header=live swaps CSS to CDN) -->
   <script>(function(){var m=location.search.match(/[?&]theme=([\w-]+)/)||document.cookie.match(/(?:^|;\s*)neo_theme=([\w-]+)/);if(m&&m[1]!=='default')document.documentElement.dataset.theme=decodeURIComponent(m[1]);})();</script>
   <link rel="stylesheet" href="css/neorgon-header.css">
@@ -40,9 +44,9 @@
     "@context": "https://schema.org",
     "@type": "WebApplication",
     "name": "Resume Forge",
-    "description": "Create tech and gaming resumes with heart-rated skills, PSN trophies, Steam stats, and custom visual themes. Export as PDF",
+    "description": "Build a CV from YAML, Markdown, JSON Resume or your LinkedIn export. Six templates, palettes, icon tiles, banner photo, local saves, vector PDF",
     "url": "https://resume.neorgon.com/",
-    "applicationCategory": "DeveloperApplication",
+    "applicationCategory": "BusinessApplication",
     "operatingSystem": "Any",
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
     "author": { "@type": "Organization", "name": "Neorgon", "url": "https://neorgon.com/" }
@@ -60,11 +64,13 @@
       </a>
       <a href="./" class="header-title-link">
         <h1>RESUME FORGE</h1>
-        <div class="header-subtitle">// LEVEL UP YOUR CV</div>
+        <div class="header-subtitle">// YAML IN, PDF OUT</div>
       </a>
     </div>
-
     <div class="header-right">
+      <div class="header-actions">
+        <button class="btn btn--ghost btn--sm" id="btn-help" title="What this is and how it works">? Help</button>
+      </div>
       <a class="header-home" href="https://neorgon.com/" title="neorgon.com" aria-label="Neorgon home">
         <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
           <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
@@ -73,288 +79,185 @@
     </div>
   </header>
 
-  <main id="main">
-    <div class="editor-layout">
-      <!-- Preview Panel -->
-      <div class="preview-panel">
-        <div class="preview-header">
-          <h2>// PREVIEW</h2>
-          <button class="btn-secondary" id="exportBtn">⚡ EXPORT PDF</button>
-        </div>
-        <div class="canvas-wrapper">
-          <canvas id="resumeCanvas"></canvas>
+  <!-- Toolbar: one row, every entry point. Each button opens the Catalog on its own tab or runs one action. -->
+  <div class="toolbar" role="toolbar" aria-label="Resume actions">
+    <div class="toolbar-group">
+      <button class="btn btn-sm btn-primary" data-act="catalog" data-tab="templates" title="Six layouts, rendered with your own data (T)">⊞ Templates</button>
+      <button class="btn btn-sm" data-act="catalog" data-tab="examples" title="Complete example resumes to start from">★ Examples</button>
+      <button class="btn btn-sm" data-act="catalog" data-tab="sections" title="Add a section type">+ Section</button>
+      <button class="btn btn-sm" data-act="catalog" data-tab="design" title="Palettes, fonts, shapes (D)">✳ Design</button>
+    </div>
+    <div class="toolbar-group">
+      <label class="btn btn-sm btn-file" title="YAML, JSON, JSON Resume, Markdown, or a LinkedIn export (ZIP or CSVs)">⇤ Import<input type="file" id="file-import" accept=".yaml,.yml,.json,.md,.txt,.zip,.csv,application/zip,text/csv" multiple hidden></label>
+      <div class="menu-wrap">
+        <button class="btn btn-sm" data-act="menu" data-menu="export-menu" aria-haspopup="true" aria-expanded="false">⇥ Export ▾</button>
+        <div class="menu" id="export-menu" role="menu" hidden>
+          <button role="menuitem" data-act="export" data-format="yaml">YAML (.yaml), the canonical file</button>
+          <button role="menuitem" data-act="export" data-format="json">JSON (.json), same tree</button>
+          <button role="menuitem" data-act="export" data-format="jsonresume">JSON Resume (.json), jsonresume.org schema</button>
+          <button role="menuitem" data-act="export" data-format="md">Markdown (.md), readable, llms.txt style</button>
+          <button role="menuitem" data-act="export" data-format="html">Standalone HTML (.html)</button>
+          <button role="menuitem" data-act="export" data-format="pdf">PDF, via the browser's print dialog</button>
         </div>
       </div>
-
-      <!-- Editor Panel -->
-      <div class="editor-panel">
-        <div class="editor-tabs">
-          <button class="editor-tab active" data-tab="personal">Personal</button>
-          <button class="editor-tab" data-tab="experience">Experience</button>
-          <button class="editor-tab" data-tab="skills">Skills</button>
-          <button class="editor-tab" data-tab="education">Education</button>
-          <button class="editor-tab" data-tab="certifications">Certs</button>
-          <button class="editor-tab" data-tab="gaming">Gaming</button>
-          <button class="editor-tab" data-tab="sidebar">Sidebar</button>
-          <button class="editor-tab" data-tab="layout">Layout</button>
-          <button class="editor-tab" data-tab="assets">Assets</button>
-        </div>
-
-        <div class="editor-content">
-          <!-- Personal Tab -->
-          <div class="editor-section" id="personalSection">
-            <div class="form-group">
-              <label for="inputName">Full Name</label>
-              <input type="text" id="inputName" placeholder="Your name">
-            </div>
-            <div class="form-group">
-              <label for="inputTitle">Job Title</label>
-              <input type="text" id="inputTitle" placeholder="e.g., Senior Software Engineer">
-            </div>
-            <div class="form-group">
-              <label for="inputLocation">Location</label>
-              <input type="text" id="inputLocation" placeholder="e.g., San Francisco, CA">
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="inputEmail">Email</label>
-                <input type="email" id="inputEmail" placeholder="your@email.com">
-              </div>
-              <div class="form-group">
-                <label for="inputPhone">Phone</label>
-                <input type="tel" id="inputPhone" placeholder="+1 (555) 000-0000">
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="inputLinkedin">LinkedIn</label>
-                <input type="text" id="inputLinkedin" placeholder="linkedin.com/in/...">
-              </div>
-              <div class="form-group">
-                <label for="inputGithub">GitHub</label>
-                <input type="text" id="inputGithub" placeholder="github.com/...">
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="inputWebsite">Website</label>
-              <input type="text" id="inputWebsite" placeholder="yoursite.com">
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="inputLinktree">Linktree</label>
-                <input type="text" id="inputLinktree" placeholder="linktr.ee/yourname">
-              </div>
-              <div class="form-group">
-                <label for="inputTwitter">Twitter/X</label>
-                <input type="text" id="inputTwitter" placeholder="twitter.com/yourname">
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="inputSummary">Summary</label>
-              <textarea id="inputSummary" rows="4" placeholder="Brief professional summary..."></textarea>
-            </div>
-          </div>
-
-          <!-- Experience Tab -->
-          <div class="editor-section hidden" id="experienceSection">
-            <div class="section-header">
-              <h3>Work Experience</h3>
-              <button class="btn-add" id="addExperienceBtn">+ Add</button>
-            </div>
-            <div id="experienceList"></div>
-          </div>
-
-          <!-- Skills Tab -->
-          <div class="editor-section hidden" id="skillsSection">
-            <div class="section-header">
-              <h3>Skills</h3>
-              <button class="btn-add" id="addSkillBtn">+ Add</button>
-            </div>
-            <div id="skillsList"></div>
-          </div>
-
-          <!-- Education Tab -->
-          <div class="editor-section hidden" id="educationSection">
-            <div class="section-header">
-              <h3>Education</h3>
-              <button class="btn-add" id="addEducationBtn">+ Add</button>
-            </div>
-            <div id="educationList"></div>
-            <div class="section-header" style="margin-top: 24px;">
-              <h3>Languages</h3>
-              <button class="btn-add" id="addLanguageBtn">+ Add</button>
-            </div>
-            <div id="languagesList"></div>
-          </div>
-
-          <!-- Certifications Tab -->
-          <div class="editor-section hidden" id="certificationsSection">
-            <div class="section-header">
-              <h3>Certifications</h3>
-              <button class="btn-add" id="addCertificationBtn">+ Add</button>
-            </div>
-            <div id="certificationsList"></div>
-          </div>
-
-          <!-- Gaming Tab -->
-          <div class="editor-section hidden" id="gamingSection">
-            <div class="form-group">
-              <label>
-                <input type="checkbox" id="gamingEnabled"> Include gaming stats
-              </label>
-            </div>
-            <div id="gamingFields" class="hidden">
-              <div class="form-group">
-                <label for="inputPsnUsername">PSN Username</label>
-                <input type="text" id="inputPsnUsername" placeholder="Your PSN ID">
-                <button class="btn-fetch" id="fetchPsnBtn">Fetch PSN Stats</button>
-              </div>
-              <div id="psnStats" class="stats-display hidden"></div>
-
-              <div class="form-group" style="margin-top: 20px;">
-                <label for="inputSteamId">Steam ID</label>
-                <input type="text" id="inputSteamId" placeholder="Your Steam ID (numbers)">
-                <button class="btn-fetch" id="fetchSteamBtn">Fetch Steam Stats</button>
-              </div>
-              <div id="steamStats" class="stats-display hidden"></div>
-            </div>
-          </div>
-
-          <!-- Sidebar Tab -->
-          <div class="editor-section hidden" id="sidebarSection">
-            <div class="form-group">
-              <label>Sidebar Sections</label>
-              <p style="color: #888; font-size: 13px; margin-bottom: 12px;">
-                Enable/disable and reorder sections in the sidebar. Drag to reorder.
-              </p>
-            </div>
-            <div id="sidebarSectionsList"></div>
-          </div>
-
-          <!-- Layout Tab -->
-          <div class="editor-section hidden" id="layoutSection">
-            <div class="form-group">
-              <label>Layout Template</label>
-              <div class="radio-group">
-                <label><input type="radio" name="layoutTemplate" value="standard" checked> Standard (Sidebar)</label>
-                <label><input type="radio" name="layoutTemplate" value="big-header"> Big Header</label>
-              </div>
-              <small style="color: #888; display: block; margin-top: 4px;">
-                Big Header: Full-width header with two-column content
-              </small>
-            </div>
-
-            <div class="form-group">
-              <label>Spacing</label>
-              <div class="radio-group">
-                <label><input type="radio" name="spacing" value="tight" checked> Tight</label>
-                <label><input type="radio" name="spacing" value="normal"> Normal</label>
-                <label><input type="radio" name="spacing" value="relaxed"> Relaxed</label>
-              </div>
-              <small style="color: #888; display: block; margin-top: 4px;">
-                Tight spacing fits more content, relaxed is more readable
-              </small>
-            </div>
-
-            <div class="form-group" id="columnPositionGroup">
-              <label>Column Position</label>
-              <div class="radio-group">
-                <label><input type="radio" name="columnSide" value="left" checked> Left</label>
-                <label><input type="radio" name="columnSide" value="right"> Right</label>
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="inputColumnWidth">Column Width: <span id="columnWidthValue">30</span>%</label>
-              <input type="range" id="inputColumnWidth" min="20" max="40" value="30" step="1">
-            </div>
-            <div class="form-group">
-              <label for="inputColumnColor">Column Color</label>
-              <input type="color" id="inputColumnColor" value="#2d5016">
-            </div>
-            <div class="form-group">
-              <label for="inputColumnOpacity">Column Opacity: <span id="columnOpacityValue">100</span>%</label>
-              <input type="range" id="inputColumnOpacity" min="0" max="100" value="100" step="5">
-            </div>
-            <div class="form-group">
-              <label for="inputFontHeading">Heading Font</label>
-              <select id="inputFontHeading">
-                <option value="Permanent Marker">Permanent Marker</option>
-                <option value="Press Start 2P">Press Start 2P</option>
-                <option value="Bangers">Bangers</option>
-                <option value="Righteous">Righteous</option>
-                <option value="Bebas Neue">Bebas Neue</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="inputFontBody">Body Font</label>
-              <select id="inputFontBody">
-                <option value="Inter" selected>Inter</option>
-                <option value="Roboto">Roboto</option>
-                <option value="Open Sans">Open Sans</option>
-                <option value="Lato">Lato</option>
-                <option value="Avenir Next">Avenir Next</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Assets Tab -->
-          <div class="editor-section hidden" id="assetsSection">
-            <div class="form-group">
-              <label>Profile Photo</label>
-              <input type="file" id="inputProfilePhoto" accept="image/*">
-              <div id="profilePhotoPreview" class="image-preview hidden"></div>
-            </div>
-
-            <div class="form-group">
-              <label>Photo Frame Shape</label>
-              <div class="radio-group">
-                <label><input type="radio" name="photoShape" value="circle" checked> Circle</label>
-                <label><input type="radio" name="photoShape" value="rounded"> Rounded</label>
-                <label><input type="radio" name="photoShape" value="square"> Square</label>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>
-                <input type="checkbox" id="photoBorderToggle" checked> Show Border
-              </label>
-            </div>
-
-            <div class="form-group" id="borderOptions">
-              <label for="inputBorderColor">Border Color</label>
-              <input type="color" id="inputBorderColor" value="#8b5cf6">
-            </div>
-
-            <div class="form-group" id="borderWidthGroup">
-              <label for="inputBorderWidth">Border Width: <span id="borderWidthValue">4</span>px</label>
-              <input type="range" id="inputBorderWidth" min="1" max="10" value="4" step="1">
-            </div>
-
-            <div class="form-group">
-              <label>Background Image (Column)</label>
-              <input type="file" id="inputBgImage" accept="image/*">
-              <div id="bgImagePreview" class="image-preview hidden"></div>
-              <small style="color: #888; display: block; margin-top: 8px;">
-                Recommended: 600×1200px or larger, portrait orientation
-              </small>
-            </div>
-
-            <div class="form-group">
-              <label for="inputBgDim">Background Dim: <span id="bgDimValue">0</span>%</label>
-              <input type="range" id="inputBgDim" min="0" max="80" value="0" step="5">
-              <small style="color: #888;">Darken background image with black overlay</small>
-            </div>
-
-            <button class="btn-secondary" id="clearAssetsBtn">Clear All Assets</button>
-          </div>
+      <button class="btn btn-sm btn-primary" data-act="export" data-format="pdf" title="Vector PDF through the print dialog: choose Save as PDF, no margins (P)">⬇ PDF</button>
+    </div>
+    <div class="toolbar-group toolbar-saves">
+      <label class="toolbar-label" for="saved-select">Saved</label>
+      <select id="saved-select" class="select-sm" aria-label="Saved resumes"></select>
+      <button class="btn btn-sm" data-act="save" title="Save this resume in this browser (S)">💾 Save</button>
+      <div class="menu-wrap">
+        <button class="btn btn-sm" data-act="menu" data-menu="saves-menu" aria-haspopup="true" aria-expanded="false">▾</button>
+        <div class="menu" id="saves-menu" role="menu" hidden>
+          <button role="menuitem" data-act="save-as">Save as…</button>
+          <button role="menuitem" data-act="rename-saved">Rename…</button>
+          <button role="menuitem" data-act="duplicate-saved">Duplicate</button>
+          <button role="menuitem" data-act="delete-saved">Delete</button>
+          <hr>
+          <button role="menuitem" data-act="new-doc">New blank resume</button>
+          <button role="menuitem" data-act="reset-all" class="is-danger">Forget everything saved here</button>
         </div>
       </div>
     </div>
+  </div>
+
+  <main id="main" class="workspace">
+    <!-- Editor -->
+    <section class="editor" aria-label="Editor">
+      <div class="editor-tabs" role="tablist">
+        <button class="editor-tab active" role="tab" data-tab="content" aria-selected="true">Content</button>
+        <button class="editor-tab" role="tab" data-tab="design" aria-selected="false">Design</button>
+        <button class="editor-tab" role="tab" data-tab="yaml" aria-selected="false">YAML</button>
+      </div>
+      <div class="editor-scroll">
+        <div class="editor-panel" id="panel-content" role="tabpanel"></div>
+        <div class="editor-panel" id="panel-design" role="tabpanel" hidden></div>
+        <div class="editor-panel editor-panel-yaml" id="panel-yaml" role="tabpanel" hidden>
+          <p class="panel-hint">The whole resume as YAML. Edit here or in the form; both stay in sync. Apply parses the text; Refresh rewrites it from the form. Paste JSON, JSON Resume or Markdown here too: Apply detects the format.</p>
+          <div class="yaml-actions">
+            <button class="btn btn-sm btn-primary" data-act="yaml-apply" title="Parse the text and replace the resume (Ctrl/Cmd+Enter)">Apply</button>
+            <button class="btn btn-sm" data-act="yaml-refresh" title="Rewrite the text from the current resume">Refresh</button>
+            <button class="btn btn-sm" data-act="yaml-copy">Copy</button>
+            <span class="yaml-status" id="yaml-status" role="status" aria-live="polite"></span>
+          </div>
+          <textarea id="yaml-input" class="yaml-input" spellcheck="false" aria-label="Resume YAML"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <!-- Preview -->
+    <section class="preview" aria-label="Preview">
+      <div class="preview-bar">
+        <span class="preview-title">Preview</span>
+        <span class="preview-meta" id="preview-meta" role="status" aria-live="polite"></span>
+        <label class="preview-ctl"><input type="checkbox" id="guides-toggle" checked> Page guides</label>
+        <label class="preview-ctl">Zoom
+          <select id="zoom-select" class="select-sm" aria-label="Preview zoom">
+            <option value="fit" selected>Fit</option>
+            <option value="0.5">50%</option>
+            <option value="0.75">75%</option>
+            <option value="1">100%</option>
+            <option value="1.25">125%</option>
+          </select>
+        </label>
+      </div>
+      <div class="preview-scroll" id="preview-scroll">
+        <div class="preview-stage" id="preview-stage">
+          <div class="sheet-scale" id="sheet-scale">
+            <div id="sheet-host"></div>
+            <div class="page-guides" id="page-guides" aria-hidden="true"></div>
+          </div>
+        </div>
+      </div>
+      <ul class="lint-list" id="lint-list" aria-label="Notes on this resume"></ul>
+    </section>
   </main>
 
+  <!-- Catalog overlay: templates, examples, section types, design -->
+  <div class="cat-overlay" id="catalog" role="dialog" aria-modal="true" aria-labelledby="catalog-title" hidden>
+    <div class="cat-bar">
+      <h2 id="catalog-title">Catalog</h2>
+      <div class="cat-tabs" id="cat-tabs" role="tablist">
+        <button class="cat-tab" role="tab" data-cat-tab="templates">Templates</button>
+        <button class="cat-tab" role="tab" data-cat-tab="examples">Examples</button>
+        <button class="cat-tab" role="tab" data-cat-tab="sections">Sections</button>
+        <button class="cat-tab" role="tab" data-cat-tab="design">Design</button>
+      </div>
+      <button class="btn btn-sm cat-close" data-act="catalog-close" aria-label="Close catalog">✕ Close (Esc)</button>
+    </div>
+    <div class="cat-scroll" id="cat-body"></div>
+  </div>
+
+  <!-- Icon picker -->
+  <dialog class="neo-dialog neo-dialog-wide" id="icon-dialog" aria-labelledby="icon-title">
+    <h3 id="icon-title">Pick an icon</h3>
+    <p class="dialog-sub">Brand marks come from Simple Icons and recolour with the palette. Generic glyphs are drawn here. Or use the link's favicon, upload a file (SVG, PNG; freeicons.io works well), or paste an image URL.</p>
+    <div class="icon-tools">
+      <input type="search" id="icon-search" class="input-sm" placeholder="Search: github, camera, trophy…" aria-label="Search icons" autocomplete="off">
+      <button class="btn btn-sm" data-act="icon-set" data-icon="">Auto from link</button>
+      <button class="btn btn-sm" data-act="icon-set" data-icon="favicon">Favicon of link</button>
+      <label class="btn btn-sm btn-file">Upload…<input type="file" id="icon-upload" accept="image/svg+xml,image/png,image/jpeg,image/webp" hidden></label>
+      <input type="url" id="icon-url" class="input-sm" placeholder="https://…/icon.svg" aria-label="Image URL">
+      <button class="btn btn-sm" data-act="icon-url">Use URL</button>
+    </div>
+    <div class="icon-grid" id="icon-grid"></div>
+    <div class="neo-dialog-actions"><button class="btn btn-sm" data-act="dialog-close">Cancel</button></div>
+  </dialog>
+
+  <!-- Confirm -->
+  <dialog class="neo-dialog" id="confirm-dialog">
+    <h3 id="confirm-title">Replace the current resume?</h3>
+    <p id="confirm-body"></p>
+    <div class="neo-dialog-actions">
+      <button class="btn btn-sm" value="cancel" id="confirm-cancel">Keep mine</button>
+      <button class="btn btn-sm btn-primary" value="ok" id="confirm-ok">Replace</button>
+    </div>
+  </dialog>
+
+  <!-- Prompt (names) -->
+  <dialog class="neo-dialog" id="prompt-dialog">
+    <form method="dialog">
+      <h3 id="prompt-title">Name</h3>
+      <input type="text" id="prompt-input" class="input-sm input-wide" maxlength="80" autocomplete="off">
+      <div class="neo-dialog-actions">
+        <button class="btn btn-sm" value="cancel" type="button" id="prompt-cancel">Cancel</button>
+        <button class="btn btn-sm btn-primary" value="ok" id="prompt-ok">OK</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Info / report -->
+  <dialog class="neo-dialog neo-dialog-wide" id="info-dialog">
+    <h3 id="info-title">Import</h3>
+    <div id="info-body" class="info-body"></div>
+    <div class="neo-dialog-actions"><button class="btn btn-sm btn-primary" data-act="dialog-close">Done</button></div>
+  </dialog>
+
+  <!-- Help -->
+  <dialog class="neo-dialog neo-dialog-wide" id="help-dialog">
+    <h3>Resume Forge</h3>
+    <div class="info-body">
+      <p>A CV builder that treats your resume as <strong>data</strong>: one YAML document (or JSON, JSON Resume, Markdown, a LinkedIn export) rendered through templates you can switch at any time. Nothing leaves your browser; saves live in this browser's storage.</p>
+      <ul>
+        <li><strong>Content</strong>: basics, social links with icons, and an ordered list of sections. Every section has a type (experience, skills, icon row, list, text …) and a zone (main or side column). Reorder, move between zones, hide, or delete.</li>
+        <li><strong>Design</strong>: template, palette, fonts, banner shape and image, photo shape, heading and entry styles, icon tiles, density, page size.</li>
+        <li><strong>YAML</strong>: the same resume as text. Paste a file, apply, export.</li>
+        <li><strong>PDF</strong>: the browser's print dialog produces a vector PDF with selectable text and working links. Pick "Save as PDF", set margins to none, keep background graphics on.</li>
+        <li><strong>Keys</strong>: <kbd>T</kbd> templates · <kbd>D</kbd> design · <kbd>P</kbd> PDF · <kbd>S</kbd> save · <kbd>Esc</kbd> close. Inside the YAML panel, <kbd>Ctrl/Cmd+Enter</kbd> applies.</li>
+      </ul>
+      <p>Schema reference: <a href="template.yaml" target="_blank" rel="noopener">template.yaml</a> · validate a file offline: <code>node validate.mjs resume.yaml</code> · source on GitHub via the footer.</p>
+    </div>
+    <div class="neo-dialog-actions"><button class="btn btn-sm btn-primary" data-act="dialog-close">Close</button></div>
+  </dialog>
+
+  <!-- Print root: the sheet is cloned here for printing; everything else is hidden by @media print -->
+  <div id="print-root" aria-hidden="true"></div>
+
   <footer class="neo-footer" data-footer-mode="minimal">
+    Runs in your browser: your resume, photos and saves never leave this device.
   </footer>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js" integrity="sha384-+pxiN6T7yvpryuJmE1gM9PX7yQit15auDb+ZwwvJOd/4be2Cie5/IuVXgQb/S9du" crossorigin="anonymous"></script>
   <script type="module" src="js/app.js"></script>
 </body>
 </html>
