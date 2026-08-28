@@ -10,6 +10,10 @@ import { escHtml } from './utils.js';
 
 const MM = 96 / 25.4;
 let ro = null;
+// The page count layout() measured, kept so renderLint() can report it without
+// reading offsetHeight again. One forced reflow per render is the budget; a
+// second read here would double it on every keystroke.
+let measuredPages = 1;
 
 export function initPreview() {
   const scroll = document.getElementById('preview-scroll');
@@ -52,6 +56,7 @@ export function layout() {
   const guides = document.getElementById('page-guides');
   const pageH = page.h * MM;
   const pages = Math.max(1, Math.ceil((sheet.offsetHeight - 2) / pageH));
+  measuredPages = pages;
   let gh = '';
   if (state.ui.guides !== false) {
     for (let k = 1; k < pages; k++) gh += `<div class="page-guide" style="top:${Math.round(k * pageH)}px"><span>Page ${k + 1}</span></div>`;
@@ -68,5 +73,11 @@ export function renderLint() {
   const el = document.getElementById('lint-list');
   if (!el) return;
   const notes = lintResume(state.doc);
+  // Length is the one note lintResume cannot produce: it is pure and has no
+  // DOM, so it cannot measure a rendered sheet. The number comes from the
+  // measurement layout() already took, never from a fresh read.
+  if (measuredPages > 2) {
+    notes.push({ level: 'info', text: `This resume is estimated at ${measuredPages} pages. Two is the usual maximum for a CV.` });
+  }
   el.innerHTML = notes.slice(0, 8).map((n) => `<li class="${n.level}">${escHtml(n.text)}</li>`).join('');
 }

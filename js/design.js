@@ -70,7 +70,7 @@ export function googleFontsUrl(fonts) {
 }
 
 export const TEMPLATES = {
-  banner:  { label: 'Banner',  aside: true,  desc: 'Full-width band with the name and photo, then a coloured column beside the main content. The reference layout.' },
+  banner:  { label: 'Banner',  aside: true,  desc: 'Full-width band with the name and photo, then a coloured column beside the main content. Pattern or photo behind the band.' },
   sidebar: { label: 'Sidebar', aside: true,  desc: 'A coloured column down one side holds the photo, contact and aside sections; the main column carries the rest.' },
   split:   { label: 'Split',   aside: true,  desc: 'Light header with the photo beside the name, a thin accent rule, then two quiet columns. No band.' },
   classic: { label: 'Classic', aside: false, desc: 'One column, centred name, rules between sections. The plainest and the most parser-friendly.' },
@@ -88,7 +88,7 @@ export const ENTRY_STYLES   = ['plain', 'timeline', 'cards'];
 export const ICON_STYLES    = ['tiles', 'circles', 'outline', 'plain'];
 export const DENSITIES      = ['compact', 'normal', 'relaxed'];
 export const SKILL_STYLES   = ['tags', 'bars', 'dots', 'hearts', 'list', 'grid'];
-export const LINK_STYLES    = ['icons', 'text', 'both'];
+export const LINK_STYLES    = ['icons', 'text', 'both', 'none'];
 export const BULLETS        = ['✦', '•', '▸', '◆', '→', '✓', '-'];
 export const PAGES = {
   A4:     { label: 'A4',        w: 210,   h: 297 },
@@ -110,7 +110,10 @@ export function defaultDesign() {
     skills: 'tags',
     links: 'icons',
     icons: 'tiles',
-    photo: { shape: 'circle', size: 'md', ring: true, ringColor: '' },
+    // x, y and zoom are integer percentages: the focal point the photo is
+    // cropped around, and how far it is scaled up. Integers keep the design
+    // panel's plain "%" slider label correct without a special case.
+    photo: { shape: 'circle', size: 'md', ring: true, ringColor: '', x: 50, y: 50, zoom: 100 },
     banner: { shape: 'flat', height: 'normal', image: '', dim: 45, pattern: 'none' },
     columns: { side: 'left', width: 34 },
   };

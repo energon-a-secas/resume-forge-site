@@ -24,7 +24,7 @@ export function toMarkdown(model) {
   if (b.links?.length) out.push('', `Links: ${b.links.map((l) => inlineLink(l.label, l.url, l.icon)).join(' · ')}`);
   for (const s of m.sections) {
     const def = SECTION_TYPES[s.type] || SECTION_TYPES.text;
-    const marker = `<!-- ${s.type} ${s.zone}${s.style ? ` ${s.style}` : ''}${s.hidden ? ' hidden' : ''} -->`;
+    const marker = `<!-- ${s.type} ${s.zone}${s.style ? ` ${s.style}` : ''}${s.source === 'basics' ? ' from-basics' : ''}${s.hidden ? ' hidden' : ''} -->`;
     out.push('', `## ${s.title || def.title} ${marker}`);
     switch (s.type) {
       case 'text':
@@ -85,7 +85,8 @@ export function toMarkdown(model) {
         for (const it of s.items) { out.push(`- ${segs(it.title, it.publisher, it.date, it.url)}`); if (it.summary) out.push(`  ${it.summary.trim().replace(/\n+/g, ' ')}`); }
         break;
       case 'iconrow':
-        for (const it of s.items) out.push(`- ${inlineLink(it.label, it.url, it.icon)}`);
+        if (s.source === 'basics') out.push('(the links from Basics)');
+        else for (const it of s.items) out.push(`- ${inlineLink(it.label, it.url, it.icon)}`);
         break;
       case 'list':
         for (const it of s.items) out.push(`- ${it.text}${iconTag(it.icon)}`);
@@ -104,6 +105,8 @@ export function toMarkdown(model) {
         if (s.data?.psn?.username) out.push(`- PSN: ${s.data.psn.username}`);
         if (s.data?.steam?.id) out.push(`- Steam: ${s.data.steam.id}`);
         break;
+      case 'pagebreak':
+        break; // no body: the heading marker is the whole round trip
       default: break;
     }
   }
@@ -118,7 +121,7 @@ const TYPE_BY_HEADING = [
   [/skill|stack|technolog|tools|competenc|habilidad/i, 'skills'],
   [/language|idioma/i, 'languages'],
   [/certif|licen|credential/i, 'certifications'],
-  [/project|portfolio|side/i, 'projects'],
+  [/project|portfolio|side|proyecto/i, 'projects'],
   [/award|honou?r|achievement|recognition|premio/i, 'awards'],
   [/volunteer|community|voluntari/i, 'volunteer'],
   [/publication|talk|paper|article|publicaci/i, 'publications'],
@@ -126,8 +129,8 @@ const TYPE_BY_HEADING = [
   [/interest|hobb|passion|intereses/i, 'tags'],
   [/contact|reach|contacto/i, 'contact'],
   [/reference|referencia/i, 'references'],
-  [/gaming|games|psn|steam/i, 'gaming'],
-  [/trivia|fact|fun|dato/i, 'list'],
+  [/gaming|games|psn|steam|juego/i, 'gaming'],
+  [/trivia|fact|fun|dato|curiosidad/i, 'list'],
 ];
 
 function classifySegments(line) {
@@ -203,7 +206,7 @@ export function fromMarkdown(text) {
     cur.entry = null;
   };
   for (const ln of rest) {
-    const hm = /^##\s+(.*?)\s*(?:<!--\s*([\w-]+)\s+(main|aside)(?:\s+([\w-]+))?(?:\s+(hidden))?\s*-->)?\s*$/.exec(ln);
+    const hm = /^##\s+(.*?)\s*(?:<!--\s*([\w-]+)\s+(main|aside)((?:\s+[\w-]+)*)\s*-->)?\s*$/.exec(ln);
     if (hm && !/^###/.test(ln)) {
       finishEntry(); flush();
       const title = hm[1].trim();
@@ -213,7 +216,11 @@ export function fromMarkdown(text) {
         if (hm[2]) warnings.push(`section type "${hm[2]}" is unknown; inferred ${type}`);
       }
       const sec = newSection(type, hm[3] || undefined);
-      sec.title = title; sec.items = []; sec.style = hm[4] && hm[4] !== 'hidden' ? hm[4] : ''; sec.hidden = hm[5] === 'hidden' || hm[4] === 'hidden';
+      const tokens = (hm[4] || '').trim().split(/\s+/).filter(Boolean);
+      sec.title = title; sec.items = [];
+      sec.hidden = tokens.includes('hidden');
+      sec.source = tokens.includes('from-basics') ? 'basics' : '';
+      sec.style = tokens.find((t) => t !== 'hidden' && t !== 'from-basics') || '';
       cur = { sec, entry: null, textLines: [] };
       continue;
     }

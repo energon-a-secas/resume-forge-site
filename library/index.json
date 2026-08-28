@@ -1,6 +1,6 @@
 [
-  { "id": "cloud-architect",   "category": "Engineering", "name": "Cloud architect",
-    "desc": "The reference layout: banner with a pattern, photo over the band, pill headings, icon tiles for socials and hobbies, a trivia card, roles as company > team (dates) with bullets.",
+  { "id": "cloud-architect",   "category": "Engineering", "name": "Cloud platform engineer",
+    "desc": "The banner layout: a pattern or photo behind the band, portrait over its edge, pill headings, icon tiles for socials and hobbies, a trivia card, roles as company > team (dates) with bullets.",
     "uses": "banner · navy · pill headings · icon tiles · list card" },
   { "id": "frontend-engineer", "category": "Engineering", "name": "Frontend engineer",
     "desc": "A coloured side column with contact, grouped skill bars and language dots; roles on a timeline; projects with links.",

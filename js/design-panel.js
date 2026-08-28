@@ -13,6 +13,12 @@ const chips = (path, values, cur, labelOf = (v) => v) =>
 
 const group = (label, inner, hint = '') => `<div class="ctl-group"><label class="ctl-label">${escHtml(label)}</label>${inner}${hint ? `<p class="panel-hint" style="margin:6px 0 0">${escHtml(hint)}</p>` : ''}</div>`;
 
+// A labelled percent slider. The .range-row itself holds exactly the input and
+// its readout, because events.js updates the first span it finds in the row.
+const pctRow = (path, label, value, min, max) =>
+  `<div class="field" style="margin-top:8px"><label>${escHtml(label)}</label>
+    <div class="range-row"><input type="range" min="${min}" max="${max}" step="1" data-design="${path}" value="${value}" aria-label="${escHtml(label)}"><span>${value}%</span></div></div>`;
+
 export function designControlsHtml(design, { rich = false } = {}) {
   const d = design;
   const colors = resolveColors(d);
@@ -46,7 +52,7 @@ export function designControlsHtml(design, { rich = false } = {}) {
   out.push(group('Bullet glyph', chips('design.bullet', BULLETS, d.bullet)));
   out.push(group('Skills default style', chips('design.skills', SKILL_STYLES, d.skills)));
   out.push(group('Icon rows', chips('design.icons', ICON_STYLES, d.icons)));
-  out.push(group('Header links', chips('design.links', LINK_STYLES, d.links, (v) => ({ icons: 'icons only', text: 'text only', both: 'icon + text' })[v])));
+  out.push(group('Header links (Basics > Links, beside the name)', chips('design.links', LINK_STYLES, d.links, (v) => ({ icons: 'icons only', text: 'text only', both: 'icon + text', none: 'hidden (use a side-column icon row instead)' })[v])));
 
   out.push(group('Photo', `${chips('design.photo.shape', PHOTO_SHAPES, d.photo.shape)}
     <div class="chips" style="margin-top:6px">${PHOTO_SIZES.map((v) => chip('design.photo.size', v, ({ sm: 'small', md: 'medium', lg: 'large' })[v], d.photo.size === v)).join('')}</div>
@@ -54,7 +60,11 @@ export function designControlsHtml(design, { rich = false } = {}) {
       <label><input type="checkbox" data-design="design.photo.ring" ${d.photo.ring ? 'checked' : ''}> ring</label>
       <label>ring colour <input type="color" data-design="design.photo.ringColor" value="${d.photo.ringColor || colors.page}"></label>
       <button type="button" class="btn btn-sm" data-act="design-set" data-path="design.photo.ringColor" data-value="">auto</button>
-    </div>`));
+    </div>
+    ${pctRow('design.photo.x', 'Focal point, left to right', d.photo.x, 0, 100)}
+    ${pctRow('design.photo.y', 'Focal point, top to bottom', d.photo.y, 0, 100)}
+    ${pctRow('design.photo.zoom', 'Zoom', d.photo.zoom, 100, 300)}`,
+    'Framing crops the photo around the focal point. Move the point onto the face first, then zoom in.'));
 
   out.push(group('Banner (banner template)', `${chips('design.banner.shape', BANNER_SHAPES, d.banner.shape)}
     <div class="chips" style="margin-top:6px">${BANNER_HEIGHTS.map((v) => chip('design.banner.height', v, v, d.banner.height === v)).join('')}</div>

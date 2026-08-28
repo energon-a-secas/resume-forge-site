@@ -4,7 +4,8 @@
 
 import { escHtml } from './utils.js';
 import { iconHtml } from './icons.js';
-import { SECTION_TYPES, LEVEL_WORDS } from './schema.js';
+import { SECTION_TYPES } from './schema.js';
+import { pack, PRESENT } from './i18n.js';
 import { resolveColors, resolveFonts, TEMPLATES, PAGES } from './design.js';
 
 const PHOTO_MM = { sm: 28, md: 38, lg: 50 };
@@ -32,25 +33,35 @@ const paragraphs = (text) => String(text || '').trim().split(/\n{2,}/).filter(Bo
   .map((p) => `<p>${inlineMd(p.trim()).replace(/\n/g, '<br>')}</p>`).join('');
 
 const RANGE_SEP = ' \u2013 ';
-const range = (start, end) => (start && end ? `${start}${RANGE_SEP}${end}` : start || end || '');
+/**
+ * A date range, with the open end printed in the document's language. The model
+ * always stores the English literal ("Present"), because JSON Resume carries no
+ * language and an imported file has to keep round-tripping; the word is swapped
+ * here, at render time, so changing meta.lang changes the printed word both ways
+ * and loses nothing.
+ */
+const range = (start, end, L) => {
+  const e = L && PRESENT.test(String(end || '').trim()) ? L.present : end;
+  return start && e ? `${start}${RANGE_SEP}${e}` : start || e || '';
+};
 const sep = '<span class="r-sep">\u203a</span>';
 const dot = '<span class="r-sep">\u00b7</span>';
 const join = (parts, s = dot) => parts.filter(Boolean).join(s);
 const linkOr = (url, inner) => { const h = safeHref(url); return h ? `<a href="${escHtml(h)}">${inner}</a>` : inner; };
 const cap = (s) => String(s || '').replace(/^\w/, (c) => c.toUpperCase());
 
-function levelMark(style, n) {
+function levelMark(style, n, L) {
   const lvl = Math.max(0, Math.min(5, n | 0));
   if (!lvl) return '';
   if (style === 'bars') return `<span class="r-bar" style="--lvl:${lvl}"><i></i></span>`;
   if (style === 'dots') return `<span class="r-dots">${[1, 2, 3, 4, 5].map((i) => `<i class="${i <= lvl ? 'on' : ''}"></i>`).join('')}</span>`;
   if (style === 'hearts') return `<span class="r-hearts">${[1, 2, 3, 4, 5].map((i) => `<i class="${i <= lvl ? 'on' : ''}">\u2665</i>`).join('')}</span>`;
-  return `<span class="r-lvl">${escHtml(LEVEL_WORDS[lvl] || '')}</span>`;
+  return `<span class="r-lvl">${escHtml(L.levels[lvl] || '')}</span>`;
 }
 
 /* ───────────────────────── section renderers ───────────────────────── */
 
-function renderEntries(s, kind, design) {
+function renderEntries(s, kind, design, L) {
   const items = s.items.map((it) => {
     let head = '';
     let meta = [];
@@ -58,7 +69,7 @@ function renderEntries(s, kind, design) {
     if (kind === 'experience') {
       head = it.role || it.company;
       meta = [linkOr(it.url, escHtml(it.company)), escHtml(it.team)];
-      const dates = range(it.start, it.end);
+      const dates = range(it.start, it.end, L);
       const metaHtml = join(meta, ` ${sep} `) + (dates ? ` <span class="r-entry-dates">(${escHtml(dates)})</span>` : '');
       sub = [escHtml(it.location)];
       return entryHtml(head, metaHtml, sub, it.summary, it.highlights, design);
@@ -66,18 +77,18 @@ function renderEntries(s, kind, design) {
     if (kind === 'education') {
       head = it.degree || it.school;
       const school = it.degree ? linkOr(it.url, escHtml(it.school)) : '';
-      const metaHtml = join([school, escHtml(it.field), escHtml(range(it.start, it.end))]);
+      const metaHtml = join([school, escHtml(it.field), escHtml(range(it.start, it.end, L))]);
       sub = [escHtml(it.location), escHtml(it.score)];
       return entryHtml(head, metaHtml, sub, it.notes, [], design);
     }
     if (kind === 'projects') {
       head = it.name;
-      const metaHtml = join([escHtml(it.role), escHtml(range(it.start, it.end)), it.url ? linkOr(it.url, escHtml(it.url.replace(/^https?:\/\//, ''))) : '']);
+      const metaHtml = join([escHtml(it.role), escHtml(range(it.start, it.end, L)), it.url ? linkOr(it.url, escHtml(it.url.replace(/^https?:\/\//, ''))) : '']);
       return entryHtml(linkOr(it.url, escHtml(head)), metaHtml, [], it.summary, it.highlights, design, true);
     }
     // volunteer
     head = it.role || it.org;
-    const metaHtml = join([linkOr(it.url, escHtml(it.org)), escHtml(range(it.start, it.end))]);
+    const metaHtml = join([linkOr(it.url, escHtml(it.org)), escHtml(range(it.start, it.end, L))]);
     return entryHtml(head, metaHtml, [escHtml(it.location)], it.summary, it.highlights, design);
   });
   return `<div class="r-entries">${items.join('')}</div>`;
@@ -94,7 +105,7 @@ ${highlights?.length ? `<ul class="r-bullets">${highlights.map((h) => `<li>${inl
 </div>`;
 }
 
-function renderSkills(s, design) {
+function renderSkills(s, design, L) {
   const style = s.style || design.skills || 'tags';
   const groups = [];
   for (const it of s.items) {
@@ -106,26 +117,27 @@ function renderSkills(s, design) {
   }
   const hasGroups = groups.some((g) => g.name);
   const list = (items) => {
-    if (style === 'tags') return `<ul class="r-tags">${items.map((it) => `<li class="r-tag">${escHtml(it.name)}${it.level ? levelMark('word', it.level) : ''}</li>`).join('')}</ul>`;
-    if (style === 'bars' || style === 'dots' || style === 'hearts') return `<ul class="r-levels">${items.map((it) => `<li><span class="r-lvl-name">${escHtml(it.name)}</span>${levelMark(style, it.level)}</li>`).join('')}</ul>`;
-    if (style === 'grid') return `<ul class="r-grid2 r-plainlist">${items.map((it) => `<li>${escHtml(it.name)}${it.level ? ` ${levelMark('word', it.level)}` : ''}</li>`).join('')}</ul>`;
-    return `<ul class="r-plainlist">${items.map((it) => `<li>${escHtml(it.name)}${it.level ? ` ${levelMark('word', it.level)}` : ''}</li>`).join('')}</ul>`;
+    if (style === 'tags') return `<ul class="r-tags">${items.map((it) => `<li class="r-tag">${escHtml(it.name)}${it.level ? levelMark('word', it.level, L) : ''}</li>`).join('')}</ul>`;
+    if (style === 'bars' || style === 'dots' || style === 'hearts') return `<ul class="r-levels">${items.map((it) => `<li><span class="r-lvl-name">${escHtml(it.name)}</span>${levelMark(style, it.level, L)}</li>`).join('')}</ul>`;
+    if (style === 'grid') return `<ul class="r-grid2 r-plainlist">${items.map((it) => `<li>${escHtml(it.name)}${it.level ? ` ${levelMark('word', it.level, L)}` : ''}</li>`).join('')}</ul>`;
+    return `<ul class="r-plainlist">${items.map((it) => `<li>${escHtml(it.name)}${it.level ? ` ${levelMark('word', it.level, L)}` : ''}</li>`).join('')}</ul>`;
   };
   if (!hasGroups) return list(s.items.filter((it) => it.name));
   return groups.map((g) => `<div class="r-group">${g.name ? `<div class="r-group-label">${escHtml(g.name)}</div>` : ''}${list(g.items)}</div>`).join('');
 }
 
-function renderLanguages(s) {
+function renderLanguages(s, L) {
   const style = s.style || 'list';
   const items = s.items.filter((it) => it.name);
   if (style === 'tags') return `<ul class="r-tags">${items.map((it) => `<li class="r-tag">${escHtml(it.name)}${it.level ? `<span class="r-lvl">${escHtml(it.level)}</span>` : ''}</li>`).join('')}</ul>`;
-  if (style === 'bars' || style === 'dots') return `<ul class="r-levels">${items.map((it) => `<li><span class="r-lvl-name">${escHtml(it.name)}${it.level ? ` <span class="r-lvl">${escHtml(it.level)}</span>` : ''}</span>${levelMark(style, it.score)}</li>`).join('')}</ul>`;
+  if (style === 'bars' || style === 'dots') return `<ul class="r-levels">${items.map((it) => `<li><span class="r-lvl-name">${escHtml(it.name)}${it.level ? ` <span class="r-lvl">${escHtml(it.level)}</span>` : ''}</span>${levelMark(style, it.score, L)}</li>`).join('')}</ul>`;
   return `<ul class="r-plainlist">${items.map((it) => `<li>${escHtml(it.name)}${it.level ? `: <span class="r-lvl">${escHtml(it.level)}</span>` : ''}</li>`).join('')}</ul>`;
 }
 
-function renderIconRow(s, design) {
+function renderIconRow(m, s, design) {
   const style = s.style || design.icons || 'tiles';
-  const items = s.items.filter((it) => it.label || it.icon || it.url);
+  const source = s.source === 'basics' ? m.basics.links.map((l) => ({ label: l.label, icon: l.icon, url: l.url })) : s.items;
+  const items = source.filter((it) => it.label || it.icon || it.url);
   const tile = (it) => {
     const ico = iconHtml(it.icon, it.url);
     const title = escHtml(it.label || it.url || '');
@@ -164,12 +176,12 @@ function renderContact(m, design) {
   return `<ul class="r-contact-list">${rows.join('')}</ul>`;
 }
 
-function renderRows(s) {
+function renderRows(s, L) {
   const li = (head, meta, text, quote = false) => `<li>${head ? `<div class="r-row-head">${head}</div>` : ''}${meta ? `<div class="r-row-meta">${meta}</div>` : ''}${text ? `<div class="${quote ? 'r-quote' : 'r-row-text'}">${paragraphs(text)}</div>` : ''}</li>`;
   let rows = '';
   switch (s.type) {
     case 'certifications':
-      rows = s.items.filter((it) => it.name).map((it) => li(linkOr(it.url, escHtml(it.name)), join([escHtml(it.issuer), escHtml(it.date), it.id ? `ID ${escHtml(it.id)}` : '']), '')).join('');
+      rows = s.items.filter((it) => it.name).map((it) => li(linkOr(it.url, escHtml(it.name)), join([escHtml(it.issuer), escHtml(it.date), it.id ? `${L.credentialId} ${escHtml(it.id)}` : '']), '')).join('');
       break;
     case 'awards':
       rows = s.items.filter((it) => it.title).map((it) => li(escHtml(it.title), join([escHtml(it.issuer), escHtml(it.date)]), it.summary)).join('');
@@ -185,7 +197,7 @@ function renderRows(s) {
   return `<ul class="r-rows">${rows}</ul>`;
 }
 
-function renderGaming(s) {
+function renderGaming(s, L) {
   const d = s.data || {};
   const out = [];
   const stat = (v, l) => `<div class="r-stat"><b>${escHtml(v)}</b><span>${escHtml(l)}</span></div>`;
@@ -206,31 +218,36 @@ function renderGaming(s) {
     out.push(`<div class="r-stats-label">Steam ${dot} ${escHtml(d.steam.id)}</div><div class="r-stats">${[
       st.games !== undefined ? stat(st.games, 'games') : '',
       st.playtime !== undefined ? stat(`${Math.round(st.playtime)}h`, 'playtime') : '',
-    ].join('')}</div>${st.recentGames?.length ? `<div class="r-row-meta">Recent: ${escHtml(st.recentGames.slice(0, 3).map((g) => g.name).join(', '))}</div>` : ''}`);
+    ].join('')}</div>${st.recentGames?.length ? `<div class="r-row-meta">${L.recent}: ${escHtml(st.recentGames.slice(0, 3).map((g) => g.name).join(', '))}</div>` : ''}`);
   }
-  return out.join('') || '<div class="r-row-meta">No gaming account set</div>';
+  return out.join('') || '<div class="r-row-meta">' + escHtml(L.noGaming) + '</div>';
 }
 
-function sectionBody(m, s, design) {
+function sectionBody(m, s, design, L) {
   switch (s.type) {
     case 'text': return `<div class="r-text-body ${s.style === 'quote' ? 'r-text-quote' : s.style === 'compact' ? 'r-text-compact' : ''}">${paragraphs(s.text)}</div>`;
-    case 'experience': case 'education': case 'projects': case 'volunteer': return renderEntries(s, s.type, design);
-    case 'skills': return renderSkills(s, design);
-    case 'languages': return renderLanguages(s);
-    case 'iconrow': return renderIconRow(s, design);
+    case 'experience': case 'education': case 'projects': case 'volunteer': return renderEntries(s, s.type, design, L);
+    case 'skills': return renderSkills(s, design, L);
+    case 'languages': return renderLanguages(s, L);
+    case 'iconrow': return renderIconRow(m, s, design);
     case 'list': return renderList(s, design);
     case 'tags': return `<ul class="r-tags">${s.items.filter((it) => it.name).map((it) => `<li class="r-tag">${escHtml(it.name)}</li>`).join('')}</ul>`;
     case 'contact': return renderContact(m, design);
-    case 'certifications': case 'awards': case 'publications': case 'references': return renderRows(s);
-    case 'gaming': return renderGaming(s);
+    case 'certifications': case 'awards': case 'publications': case 'references': return renderRows(s, L);
+    case 'gaming': return renderGaming(s, L);
     default: return '';
   }
 }
 
 export function renderSection(m, s, design = m.design) {
   if (s.hidden) return '';
+  // A page break is a marker, not a section: no title, no .r-sec wrapper, and
+  // nothing for a screen reader to announce. css/resume.css turns it into a
+  // forced break in print and a dashed line in the preview.
+  if (s.type === 'pagebreak') return '<div class="r-pagebreak" aria-hidden="true"></div>';
   const def = SECTION_TYPES[s.type] || SECTION_TYPES.text;
-  const body = sectionBody(m, s, design);
+  const L = pack(m.meta?.lang);
+  const body = sectionBody(m, s, design, L);
   if (!body) return '';
   const cols = s.columns > 1 ? ` style="columns:${s.columns};column-gap:6mm"` : '';
   return `<section class="r-sec r-sec-${s.type}" data-sid="${escHtml(s.id)}">
@@ -258,16 +275,16 @@ function contactRow(m) {
 
 function linksRow(m, design) {
   const links = m.basics.links.filter((l) => l.url || l.label);
-  if (!links.length) return '';
   const style = design.links || 'icons';
+  if (!links.length || style === 'none') return '';
   return `<div class="r-links l-${style}">${links.map((l) => {
     const label = escHtml(l.label || l.url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, ''));
     return linkOr(l.url, `${iconHtml(l.icon, l.url)}<span class="r-lbl">${label}</span>`) || `<span>${iconHtml(l.icon, l.url)}<span class="r-lbl">${label}</span></span>`;
   }).join('')}</div>`;
 }
 
-function nameBlock(m) {
-  return `<div class="r-name-block"><h1 class="r-name">${escHtml(m.basics.name || 'Your name')}</h1>${m.basics.title ? `<p class="r-title">${escHtml(m.basics.title)}</p>` : ''}</div>`;
+function nameBlock(m, L) {
+  return `<div class="r-name-block"><h1 class="r-name">${escHtml(m.basics.name || L.yourName)}</h1>${m.basics.title ? `<p class="r-title">${escHtml(m.basics.title)}</p>` : ''}</div>`;
 }
 
 /* ───────────────────────── sheet ───────────────────────── */
@@ -292,6 +309,12 @@ export function sheetStyle(design) {
     '--r-font-h': `'${f.heading.replace(/'/g, '')}'`, '--r-font-b': `'${f.body.replace(/'/g, '')}'`, '--r-scale': design.fontScale || 1,
     '--r-page-w': `${page.w}mm`, '--r-page-h': `${page.h}mm`, '--r-aside-w': `${design.columns.width}%`,
     '--r-photo': `${PHOTO_MM[design.photo.size] || 38}mm`,
+    // Framing. The model stores three integer percentages; zoom is divided by
+    // 100 here, never in the stylesheet, so css/resume.css stays free of
+    // arithmetic and keeps working when the standalone export inlines it.
+    '--r-photo-x': `${design.photo.x ?? 50}%`,
+    '--r-photo-y': `${design.photo.y ?? 50}%`,
+    '--r-photo-zoom': `${((design.photo.zoom ?? 100) / 100).toFixed(2)}`,
     '--r-dim': hasImg ? (design.banner.dim / 100).toFixed(2) : '0',
     '--r-banner-img': hasImg ? `url("${design.banner.image.replace(/["\\]/g, '')}")` : 'none',
     '--r-bullet': `'${(design.bullet || '\u2022').replace(/['\\]/g, '')}'`,
@@ -306,6 +329,7 @@ export function renderResume(m) {
   const hasContactSection = m.sections.some((s) => s.type === 'contact' && !s.hidden);
   const aside = tpl.aside ? m.sections.filter((s) => s.zone === 'aside') : [];
   const main = tpl.aside ? m.sections.filter((s) => s.zone !== 'aside') : m.sections;
+  const L = pack(m.meta?.lang);
   const secs = (list) => list.map((s) => renderSection(m, s, design)).join('\n');
   const photo = photoHtml(m, design);
   const contact = hasContactSection ? '' : contactRow(m);
@@ -313,7 +337,7 @@ export function renderResume(m) {
   const lang = escHtml(m.meta?.lang || 'en');
   let inner = '';
   if (design.template === 'banner') {
-    inner = `<header class="r-banner"><div class="r-banner-bg"></div><div class="r-banner-inner">${nameBlock(m)}${contact}${links}</div></header>
+    inner = `<header class="r-banner"><div class="r-banner-bg"></div><div class="r-banner-inner">${nameBlock(m, L)}${contact}${links}</div></header>
 <div class="r-body">
 <aside class="r-aside${photo ? '' : ' no-photo'}">${photo}${secs(aside)}</aside>
 <main class="r-main">${contact}${secs(main)}</main>
@@ -321,16 +345,16 @@ export function renderResume(m) {
   } else if (design.template === 'sidebar') {
     inner = `<div class="r-body">
 <aside class="r-aside">${photo}${secs(aside)}</aside>
-<main class="r-main"><header class="r-head">${nameBlock(m)}${contact}${links}</header>${secs(main)}</main>
+<main class="r-main"><header class="r-head">${nameBlock(m, L)}${contact}${links}</header>${secs(main)}</main>
 </div>`;
   } else if (design.template === 'classic') {
-    inner = `<header class="r-head">${photo}${nameBlock(m)}${contact}${links}</header>
+    inner = `<header class="r-head">${photo}${nameBlock(m, L)}${contact}${links}</header>
 <div class="r-body r-body-single"><main class="r-main">${secs(main)}</main></div>`;
   } else {
     // split, stripe, cards: header row, then two columns
     const headInner = design.template === 'stripe'
-      ? `<div>${nameBlock(m)}${contact}${links}</div>${photo}`
-      : `${photo}<div>${nameBlock(m)}${contact}${links}</div>`;
+      ? `<div>${nameBlock(m, L)}${contact}${links}</div>${photo}`
+      : `${photo}<div>${nameBlock(m, L)}${contact}${links}</div>`;
     inner = `<header class="r-head">${headInner}</header>
 <div class="r-body">
 <aside class="r-aside">${secs(aside)}</aside>
@@ -346,8 +370,16 @@ export function pageCss(design) {
   return `@page { size: ${page.w}mm ${page.h}mm; margin: 0; }`;
 }
 
-/** Replace a container's content with the rendered sheet; returns the <article>. */
+/**
+ * Replace a container's content with the rendered sheet; returns the <article>.
+ * The extra `is-editing` class is what shows editing-only affordances such as
+ * the page-break marker. It is added here rather than in renderResume so the
+ * PDF, the standalone HTML export and the Catalog thumbnails, which all use the
+ * string directly, keep showing exactly what prints.
+ */
 export function mountSheet(container, m) {
   container.innerHTML = renderResume(m);
-  return container.firstElementChild;
+  const el = container.firstElementChild;
+  if (el) el.classList.add('is-editing');
+  return el;
 }

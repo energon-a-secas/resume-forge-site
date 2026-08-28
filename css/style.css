@@ -99,8 +99,15 @@ input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px;
 
 /* ── workspace ─────────────────────────────────────────────── */
 .workspace {
-  flex: 1; display: grid; grid-template-columns: var(--editor-w) minmax(0, 1fr);
-  min-height: 0; height: calc(100dvh - 56px - 50px - 52px);
+  flex: 1 1 auto; display: grid; grid-template-columns: var(--editor-w) minmax(0, 1fr);
+  min-height: 0;
+}
+/* Desktop: the app owns the viewport; the editor and the preview scroll inside their panes,
+   so the preview stays put while you type. Narrow screens fall back to page scroll. */
+@media (min-width: 1025px) {
+  html { height: 100%; }
+  body { height: 100dvh; }
+  .workspace { flex: 1 1 0; min-height: 0; }
 }
 .editor { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--border, rgba(255,255,255,.1)); }
 .editor-tabs { display: flex; gap: 4px; padding: 8px 12px 0; border-bottom: 1px solid var(--border, rgba(255,255,255,.1)); }
@@ -297,7 +304,7 @@ body.is-dragging::after { content: 'Drop a YAML, JSON, Markdown, CSV or LinkedIn
 
 /* ── responsive ────────────────────────────────────────────── */
 @media (max-width: 1024px) {
-  .workspace { grid-template-columns: 1fr; height: auto; }
+  .workspace { grid-template-columns: 1fr; }
   .editor { border-right: 0; border-bottom: 1px solid var(--border, rgba(255,255,255,.1)); max-height: 60vh; }
   .preview { min-height: 70vh; }
   .toolbar-saves { margin-left: 0; }
@@ -319,3 +326,36 @@ body.is-dragging::after { content: 'Drop a YAML, JSON, Markdown, CSV or LinkedIn
   #print-root { display: block; }
   #print-root .sheet { box-shadow: none; margin: 0; }
 }
+
+/* ── drag and drop, column groups ─────────────────────────── */
+.drag-handle { cursor: grab; color: var(--text-muted, #8b8fa3); font-size: .8rem; letter-spacing: -.12em; padding: 0 4px; user-select: none; flex: none; touch-action: none; }
+.drag-handle:hover { color: var(--text-primary, #fff); }
+.drag-handle:active { cursor: grabbing; }
+.is-dragging { opacity: .45; }
+.zone-group { border: 1px dashed transparent; border-radius: 12px; padding: 6px 6px 2px; margin: 0 -6px 8px; transition: border-color var(--dur), background var(--dur); }
+.zone-group.drop-into { border-color: var(--accent); background: var(--accent-soft); }
+.zone-head { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--text-muted, #8b8fa3); margin: 4px 6px 8px; display: flex; align-items: center; gap: 8px; }
+.zone-count { background: var(--surface-2, rgba(255,255,255,.06)); border-radius: 999px; padding: 1px 7px; font-size: .66rem; }
+.zone-empty { font-size: .76rem; color: var(--text-muted, #8b8fa3); border: 1px dashed var(--border-strong, rgba(255,255,255,.22)); border-radius: 8px; padding: 12px; text-align: center; margin: 0 0 8px; }
+.zone-note { font-size: .74rem; color: var(--text-muted, #8b8fa3); margin: 0 6px 8px; line-height: 1.45; }
+.block.drop-before { box-shadow: 0 -3px 0 0 var(--accent); }
+.block.drop-after { box-shadow: 0 3px 0 0 var(--accent); }
+.item-card.drop-before { box-shadow: 0 -3px 0 0 var(--accent); }
+.item-card.drop-after { box-shadow: 0 3px 0 0 var(--accent); }
+.drag-ghost { position: fixed; left: 0; top: 0; z-index: var(--z-toast); pointer-events: none; opacity: .92; box-shadow: 0 16px 40px rgba(2,6,23,.7); transform: translate(-9999px, -9999px); }
+.drag-ghost summary, .drag-ghost .item-head { pointer-events: none; }
+.drag-ghost .block-body, .drag-ghost .grid-2 { display: none; }
+body.is-dnd { cursor: grabbing; user-select: none; }
+body.is-dnd-item .item-card .grid-2 { display: none; }
+body.is-dnd-item .item-card { padding-bottom: 4px; }
+
+/* ── accessibility: keyboard reordering, live region ────── */
+/* js/a11y.js turns every .drag-handle into a real focus stop at runtime
+   (role=button, tabindex=0, arrow keys). The glyph is a few pixels wide, so the
+   global :focus-visible ring alone reads as a stray dot beside the title: give
+   it a box to sit on. */
+.drag-handle:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 6px; background: var(--accent-soft); color: var(--text-primary, #fff); }
+
+/* Visually hidden, still announced. The live region js/a11y.js injects wears
+   this class, and so does any label that is for a screen reader only. */
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }

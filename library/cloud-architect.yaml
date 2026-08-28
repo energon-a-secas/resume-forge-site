@@ -1,130 +1,125 @@
-# Resume Forge example: the reference layout. Banner with a background image,
-# photo overlapping the band, icon tiles in the side column, trivia card,
-# experience as role + "company > team (dates)" + bullets, prose side projects.
+# Resume Forge example: the banner layout. Band with a pattern (or a photo),
+# portrait over the band's edge, pill headings, icon tiles in the side column,
+# a trivia card, roles as role + "company > team (dates)" + bullets, prose side
+# projects. Everyone and everything in this file is fictional.
 resume:
   meta:
-    title: Cloud architect (banner)
+    title: Cloud platform engineer (banner)
   basics:
-    name: Ada Reyes
-    title: Cloud Architect
-    location: Santiago, Chile
-    email: ada@example.com
-    website: https://ada.example.com
-    links:
-      - label: LinkedIn
-        url: https://www.linkedin.com/in/ada-reyes
+    name: Marina Costa
+    title: Cloud Platform Engineer
+    location: Lisbon, Portugal
+    email: marina@example.com
+    website: https://marina.example.dev
+    links:                    # typed once; the "Socials" icon row below mirrors them (source: basics)
+      - label: Website
+        url: https://marina.example.dev
+        icon: globe
+      - label: Mastodon
+        url: https://mastodon.social/@marinacosta
       - label: GitHub
-        url: https://github.com/adareyes
-      - label: Medium
-        url: https://medium.com/@adareyes
+        url: https://github.com/marinacosta
+      - label: dev.to
+        url: https://dev.to/marinacosta
+      - label: LinkedIn
+        url: https://www.linkedin.com/in/marina-costa
   sections:
     - type: text
       title: Profile
       zone: main
       text: |-
-        Building reliable cloud platforms that enable engineering teams to move faster.
+        I build the paved road: clusters, pipelines and guardrails that let product teams ship without opening a ticket.
 
-        Focused on platform design using AWS, EKS, GitLab, Infrastructure as Code, and whatever else is needed along the way.
+        Eight years across fintech and logistics platforms, mostly Kubernetes, Terraform and GitLab CI, with a soft spot for boring, well-documented infrastructure.
 
-        Currently in a more data-driven phase, analysing systems from the top down to improve how we work and keep things interesting.
+        These days I read as many dashboards as I write modules, looking for the next piece of toil worth deleting.
     - type: experience
       title: Recent experience
       zone: main
       items:
-        - role: Reporting Tech Lead
-          company: Northwind Media
-          team: Professional Services
-          start: Sep 2025
+        - role: Platform Engineering Lead
+          company: Fabrikam Logistics
+          team: Developer Platform
+          start: Jan 2024
           end: Present
           highlights:
-            - Designed and implemented internal reporting solutions using Airtable.
-            - Improved operational visibility across teams through structured reporting workflows.
-            - Act as fleet lead, coordinating priorities and supporting engineers across teams.
-        - role: Infrastructure Fleet Lead
-          company: Northwind Media
-          team: Content Platforms
-          start: Apr 2022
-          end: Sep 2025
+            - Own the internal developer platform behind 40 services; deploy frequency doubled in a year.
+            - Replaced a hand-rolled release process with shared GitLab CI templates; failed deploys fell by two thirds.
+            - Run the on-call rotation and the monthly game day; mentor three engineers.
+        - role: Senior Cloud Engineer
+          company: Fabrikam Logistics
+          team: Core Infrastructure
+          start: Jun 2021
+          end: Dec 2023
           highlights:
-            - Led infrastructure initiatives across multiple engineering squads, ensuring platform stability and delivery velocity.
-            - Defined and reviewed cloud architecture and infrastructure implementations, guiding AWS best practices.
-            - Coordinated cross-team priorities and resolved complex technical blockers across platform teams.
-            - Designed scalable infrastructure standards and documentation patterns adopted across teams.
-            - Mentored engineers and improved onboarding through structured knowledge sharing and documentation.
+            - Migrated 120 workloads from a datacenter to EKS with no customer-visible downtime.
+            - Wrote the Terraform modules and the review standard the company still uses.
+            - Cut the monthly cloud bill by 28% through right-sizing and spot node groups.
+            - Introduced SLOs for the twelve busiest services and the error budget policy that goes with them.
         - role: Cloud Engineer
-          company: Contoso Studios
-          team: Media Supply Chain
-          start: Aug 2020
-          end: Apr 2022
+          company: Woodgrove Payments
+          team: Payments Infrastructure
+          start: Mar 2018
+          end: May 2021
           highlights:
-            - Migrated the render farm to spot-backed EKS node groups, cutting compute cost by a third.
+            - Built the PCI network segmentation and the pipeline that produces its audit evidence.
     - type: text
       title: Side projects
       zone: main
       text: |-
-        I have been making YouTube videos for a little over a year, which led me to publish a few [n8n](https://n8n.io) templates to automate parts of the workflow.
+        I write a monthly newsletter on platform engineering (about 1,200 readers) and publish the Terraform snippets behind each issue as [open source](https://github.com/marinacosta).
 
-        More recently I built a set of small browser tools from a wishlist I had carried for four years, and grouped them under one hub in two weeks.
+        On weekends I maintain a [bike-route planner](https://marina.example.dev/routes) for the Lisbon coast, mostly as an excuse to play with map tiles.
     - type: iconrow
       title: Socials
       zone: aside
-      items:
-        - label: Website
-          url: https://ada.example.com
-          icon: globe
-        - label: Mastodon
-          url: https://mastodon.social/@adareyes
-        - label: GitHub
-          url: https://github.com/adareyes
-        - label: Medium
-          url: https://medium.com/@adareyes
-        - label: LinkedIn
-          url: https://www.linkedin.com/in/ada-reyes
+      source: basics          # the tiles are basics.links; no second list to keep in sync
     - type: iconrow
-      title: Trophies
+      title: Badges
       zone: aside
       items:
         - label: Credly
-          url: https://www.credly.com/users/adareyes
-        - label: PlayStation
-          icon: playstation
-        - label: Steam
-          url: https://steamcommunity.com/id/adareyes
+          url: https://www.credly.com/users/marinacosta
+        - label: Kubernetes
+          icon: kubernetes
+        - label: Hack The Box
+          url: https://app.hackthebox.com/users/marinacosta
     - type: iconrow
       title: Main hobbies
       zone: aside
       items:
+        - label: Cycling
+          icon: bike
         - label: Photography
           icon: camera
-        - label: Anime
-          icon: myanimelist
-        - label: Games
-          icon: gamepad
-        - label: Tabletop
+        - label: Board games
           icon: dice
         - label: Coffee
           icon: coffee
+        - label: Books
+          icon: book
     - type: iconrow
       title: Secondary hobbies
       zone: aside
       items:
-        - label: Writing
-          icon: pen
         - label: Music
           icon: music
-        - label: Cycling
-          icon: bike
+        - label: Hiking
+          icon: map
         - label: Cooking
           icon: utensils
+        - label: Plants
+          icon: leaf
     - type: list
       title: Trivia
       zone: aside
+      style: card
       items:
-        - text: Chilean, based in Santiago
+        - text: Portuguese, based in Lisbon
           icon: pin
-        - text: "Age: 349 months"
-        - text: Learned English because the memes were better in English
-        - text: Staycations are the best, second only to remote work
+        - text: Has run the same 10k loop every Sunday since 2019
+        - text: Learned Kubernetes on a cluster of three thrift-store laptops
+        - text: Will defend tabs over spaces for one minute, then change the subject
   design:
     template: banner
     palette: navy
@@ -132,6 +127,7 @@ resume:
     headings: pill
     icons: tiles
     bullet: ✦
+    links: none               # the links live in the side column, not beside the name
     photo:
       shape: circle
       size: lg

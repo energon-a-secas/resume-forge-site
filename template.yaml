@@ -13,20 +13,20 @@ resume:
     lang: en                    # html lang of the sheet
 
   basics:
-    name: Ada Reyes
-    title: Cloud Architect      # headline under the name
+    name: Marina Costa
+    title: Cloud Platform Engineer   # headline under the name
     photo: ""                   # data: URI (the editor embeds uploads) or https URL
-    email: ada@example.com
-    phone: +56 9 1234 5678
-    location: Santiago, Chile
-    website: https://ada.example.com
+    email: marina@example.com
+    phone: +351 912 345 678
+    location: Lisbon, Portugal
+    website: https://marina.example.dev
     links:                      # socials; render near the name and in a contact section
       - label: LinkedIn
-        url: https://www.linkedin.com/in/ada-reyes
+        url: https://www.linkedin.com/in/marina-costa
         icon: linkedin          # optional: brand slug, glyph id, "favicon", data: URI or https image URL.
                                 # Empty = detected from the URL (github.com -> github, x.com -> x, ...).
       - label: GitHub
-        url: https://github.com/adareyes
+        url: https://github.com/marinacosta
 
   # Sections render in this order. zone puts one in the main column or the side
   # column (aside); templates without a side column render aside sections inline.
@@ -42,11 +42,11 @@ resume:
       title: Experience
       zone: main
       items:
-        - role: Reporting Tech Lead
-          company: Northwind Media
-          team: Professional Services   # optional, rendered as company > team
-          location: Santiago, Chile
-          start: Sep 2025
+        - role: Platform Engineering Lead
+          company: Fabrikam Logistics
+          team: Developer Platform       # optional, rendered as company > team
+          location: Lisbon, Portugal
+          start: Jan 2024
           end: Present
           url: ""                       # optional link on the company
           summary: One line on the role.
@@ -59,9 +59,9 @@ resume:
       zone: main
       items:
         - degree: B.S. Computer Science
-          school: University of Chile
+          school: University of Lisbon
           field: Computer Science       # optional
-          location: Santiago
+          location: Lisbon
           start: 2014
           end: 2018
           score: GPA 6.5 / 7            # optional
@@ -83,7 +83,7 @@ resume:
       zone: aside
       style: list                 # list | bars | dots | tags
       items:
-        - name: Spanish
+        - name: Portuguese
           level: Native           # free text
           score: 5                # optional 0 to 5, used by bars and dots
 
@@ -101,11 +101,11 @@ resume:
       title: Projects
       zone: main
       items:
-        - name: Neorgon
-          role: Creator
-          start: 2026
+        - name: Route planner
+          role: Maintainer
+          start: 2023
           end: Present
-          url: https://neorgon.com
+          url: https://marina.example.dev/routes
           summary: What it is.
           highlights:
             - Why it matters.
@@ -146,10 +146,11 @@ resume:
       title: Socials
       zone: aside
       style: tiles                # tiles | circles | outline | plain | list (empty = design.icons)
+      source: ""                  # "basics" mirrors basics.links (type socials once); items are then ignored
       items:
         - label: GitHub
           icon: github            # brand slug or glyph id; empty = detected from url
-          url: https://github.com/adareyes
+          url: https://github.com/marinacosta
         - label: Photography      # no url: just the tile
           icon: camera
 
@@ -159,7 +160,7 @@ resume:
       style: bullets              # bullets | check | plain | card
       image: ""                   # optional data: URI or URL, shown beside the list
       items:
-        - text: Chilean, based in Santiago
+        - text: Portuguese, based in Lisbon
           icon: pin
 
     - type: tags
@@ -206,7 +207,7 @@ resume:
     entries: plain              # plain | timeline | cards   (experience, education, projects, volunteer)
     bullet: ✦                   # glyph before highlights
     skills: tags                # default style for skills sections
-    links: icons                # icons | text | both   (basics.links near the name)
+    links: icons                # icons | text | both | none   (basics.links beside the name; none when a side-column icon row shows them)
     icons: tiles                # default style for icon rows: tiles | circles | outline | plain
     photo:
       shape: circle             # circle | rounded | square | squircle | hex | none

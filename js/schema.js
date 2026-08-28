@@ -9,6 +9,7 @@
 import { defaultDesign, TEMPLATES, PALETTES, FONT_PAIRS, HEADING_STYLES, ENTRY_STYLES, ICON_STYLES,
   DENSITIES, SKILL_STYLES, LINK_STYLES, BANNER_SHAPES, BANNER_PATTERNS, BANNER_HEIGHTS,
   PHOTO_SHAPES, PHOTO_SIZES, PAGES } from './design.js';
+import { pack, sectionTitle, resolveLang } from './i18n.js';
 
 export const MODEL_VERSION = 2;
 
@@ -26,11 +27,11 @@ export const SECTION_TYPES = {
   experience: {
     label: 'Experience', title: 'Experience', zone: 'main',
     fields: [
-      F('role', 'Role', 'text', { ph: 'Reporting Tech Lead', w: 'half' }),
-      F('company', 'Company', 'text', { ph: 'Disney Media', w: 'half' }),
-      F('team', 'Team or unit', 'text', { ph: 'Professional Services', w: 'half' }),
-      F('location', 'Location', 'text', { ph: 'Santiago, Chile', w: 'half' }),
-      F('start', 'Start', 'date', { ph: 'Sep 2025', w: 'half' }),
+      F('role', 'Role', 'text', { ph: 'Platform Engineering Lead', w: 'half' }),
+      F('company', 'Company', 'text', { ph: 'Fabrikam Logistics', w: 'half' }),
+      F('team', 'Team or unit', 'text', { ph: 'Developer Platform', w: 'half' }),
+      F('location', 'Location', 'text', { ph: 'Lisbon, Portugal', w: 'half' }),
+      F('start', 'Start', 'date', { ph: 'Jan 2024', w: 'half' }),
       F('end', 'End', 'date', { ph: 'Present', w: 'half' }),
       F('url', 'Link', 'url', { ph: 'https://' }),
       F('summary', 'Summary', 'textarea', { ph: 'One or two lines on the role' }),
@@ -43,9 +44,9 @@ export const SECTION_TYPES = {
     label: 'Education', title: 'Education', zone: 'main',
     fields: [
       F('degree', 'Degree', 'text', { ph: 'B.S. Computer Science', w: 'half' }),
-      F('school', 'School', 'text', { ph: 'University of Chile', w: 'half' }),
+      F('school', 'School', 'text', { ph: 'University of Lisbon', w: 'half' }),
       F('field', 'Field', 'text', { ph: 'Computer Science', w: 'half' }),
-      F('location', 'Location', 'text', { ph: 'Santiago, Chile', w: 'half' }),
+      F('location', 'Location', 'text', { ph: 'Lisbon, Portugal', w: 'half' }),
       F('start', 'Start', 'date', { ph: '2014', w: 'half' }),
       F('end', 'End', 'date', { ph: '2018', w: 'half' }),
       F('score', 'Score', 'text', { ph: 'GPA 3.8', w: 'half' }),
@@ -90,9 +91,9 @@ export const SECTION_TYPES = {
   projects: {
     label: 'Projects', title: 'Projects', zone: 'main',
     fields: [
-      F('name', 'Project', 'text', { ph: 'Neorgon', w: 'half' }),
-      F('role', 'Role', 'text', { ph: 'Creator', w: 'half' }),
-      F('start', 'Start', 'date', { ph: '2026', w: 'half' }),
+      F('name', 'Project', 'text', { ph: 'Route planner', w: 'half' }),
+      F('role', 'Role', 'text', { ph: 'Maintainer', w: 'half' }),
+      F('start', 'Start', 'date', { ph: '2023', w: 'half' }),
       F('end', 'End', 'date', { ph: 'Present', w: 'half' }),
       F('url', 'Link', 'url', { ph: 'https://' }),
       F('summary', 'Summary', 'textarea', { ph: 'What it is and why it exists' }),
@@ -147,12 +148,12 @@ export const SECTION_TYPES = {
       F('url', 'Link (optional)', 'url', { ph: 'https://github.com/you' }),
     ],
     head: (it) => it.label,
-    desc: 'A row of icon tiles: socials, profiles, hobbies, tools. Links are optional.',
+    desc: 'A row of icon tiles: socials, profiles, hobbies, tools. Links are optional. Can mirror the links typed in Basics.',
   },
   list: {
     label: 'List', title: 'Trivia', zone: 'aside', styles: ['bullets', 'check', 'plain', 'card'], hasImage: true,
     fields: [
-      F('text', 'Text', 'text', { ph: 'Chilean, based in Santiago' }),
+      F('text', 'Text', 'text', { ph: 'Based in Lisbon, works remotely' }),
       F('icon', 'Icon (optional)', 'icon', { w: 'half' }),
     ],
     head: (it) => it.text,
@@ -183,12 +184,21 @@ export const SECTION_TYPES = {
     label: 'Gaming stats', title: 'Gaming', zone: 'aside', fields: [], hasData: true,
     desc: 'PSN trophies and Steam playtime fetched through the worker.',
   },
+  // Not a heading: the empty title is load-bearing. The renderer emits a bare
+  // marker for it and the printed sheet shows nothing at all.
+  pagebreak: {
+    label: 'Page break', title: '', zone: 'main', fields: [],
+    desc: 'Forces the next section onto a new page when printing. Shown as a marker in the preview only.',
+  },
 };
 
 export const TYPE_IDS = Object.keys(SECTION_TYPES);
 export const ZONES = ['main', 'aside'];
 
-export const LEVEL_WORDS = ['', 'Basic', 'Elementary', 'Intermediate', 'Advanced', 'Expert'];
+// The English level words, still exported because the editor's level picker and
+// the JSON Resume writer are English by definition. The other languages live
+// beside these in i18n.js, so a column cannot drift from this one.
+export const LEVEL_WORDS = pack('en').levels;
 
 let counter = 0;
 export function newId() {
@@ -206,7 +216,7 @@ export function blankResume() {
     meta: { title: 'Untitled resume', lang: 'en' },
     basics: blankBasics(),
     sections: [],
-    design: defaultDesign(),
+    design: normalizeDesign(),
   };
 }
 
@@ -218,12 +228,17 @@ export function blankItem(type) {
   return it;
 }
 
-/** A new section of `type`, ready for the editor (one blank item, no text). */
-export function newSection(type, zone) {
+/**
+ * A new section of `type`, ready for the editor (one blank item, no text).
+ * `lang` decides the default title of a section being born and nothing else:
+ * no code path revisits the title of a section that already exists.
+ */
+export function newSection(type, zone, lang = 'en') {
   const def = SECTION_TYPES[type] || SECTION_TYPES.text;
+  const kind = def === SECTION_TYPES.text && type !== 'text' ? 'text' : type;
   const s = {
-    id: newId(), type: def === SECTION_TYPES.text && type !== 'text' ? 'text' : type,
-    title: def.title, zone: zone || def.zone, style: '', items: [], text: '', image: '', hidden: false,
+    id: newId(), type: kind,
+    title: sectionTitle(lang, kind), zone: zone || def.zone, style: '', source: '', items: [], text: '', image: '', hidden: false,
   };
   if (def.fields && def.fields.length) s.items.push(blankItem(s.type));
   if (def.hasData) s.data = { psn: { username: '', stats: null }, steam: { id: '', stats: null } };
@@ -275,7 +290,7 @@ export function normalizeBasics(raw = {}) {
   return b;
 }
 
-export function normalizeSection(raw, warnings = []) {
+export function normalizeSection(raw, warnings = [], lang = 'en') {
   if (!raw || typeof raw !== 'object') return null;
   let type = str(raw.type) || 'text';
   if (!SECTION_TYPES[type]) {
@@ -286,9 +301,13 @@ export function normalizeSection(raw, warnings = []) {
   const s = {
     id: str(raw.id) || newId(),
     type,
-    title: raw.title === undefined ? def.title : str(raw.title),
+    // The only place a default title is applied on load, and only when the key
+    // is absent. toPlain always writes `title`, so a title that has survived one
+    // save is a value, not a default: changing meta.lang cannot rewrite it.
+    title: raw.title === undefined ? sectionTitle(lang, type) : str(raw.title),
     zone: oneOf(str(raw.zone), ZONES, def.zone, warnings, `zone of "${raw.title || type}"`),
     style: str(raw.style),
+    source: raw.source === 'basics' ? 'basics' : '',
     items: [],
     text: '',
     image: '',
@@ -343,6 +362,13 @@ export function normalizeDesign(raw = {}, warnings = []) {
     size: oneOf(str(p.size), PHOTO_SIZES, d.photo.size, warnings, 'photo.size'),
     ring: p.ring === undefined ? d.photo.ring : !!p.ring,
     ringColor: /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(str(p.ringColor)) ? str(p.ringColor).toLowerCase() : '',
+    // Framing. All three are integer percentages, which is what lets the design
+    // panel label them with a plain "%". Clamped against the literal defaults
+    // rather than against defaultDesign() so this file is correct whichever of
+    // the two lands first. Out of range clamps silently; junk falls back.
+    x: int(p.x, 0, 100, 50),
+    y: int(p.y, 0, 100, 50),
+    zoom: int(p.zoom, 100, 300, 100),
   };
   const b = r.banner && typeof r.banner === 'object' ? r.banner : {};
   d.banner = {
@@ -375,7 +401,7 @@ export function normalizeResume(raw) {
   };
   m.basics = normalizeBasics(src.basics || {});
   const seen = new Set();
-  m.sections = (Array.isArray(src.sections) ? src.sections : []).map((s) => normalizeSection(s, warnings)).filter(Boolean);
+  m.sections = (Array.isArray(src.sections) ? src.sections : []).map((s) => normalizeSection(s, warnings, m.meta.lang)).filter(Boolean);
   for (const s of m.sections) { while (seen.has(s.id)) s.id = newId(); seen.add(s.id); }
   m.design = normalizeDesign(src.design || {}, warnings);
   if (!m.basics.name) warnings.push('basics.name is empty');
@@ -389,10 +415,31 @@ export function lintResume(m) {
   if (!m.basics.title) notes.push({ level: 'info', text: 'No title or headline in basics' });
   if (!m.sections.length) notes.push({ level: 'warn', text: 'No sections yet' });
   const hasAside = TEMPLATES[m.design.template]?.aside;
-  const asideCount = m.sections.filter((s) => s.zone === 'aside' && !s.hidden).length;
+  const asideCount = m.sections.filter((s) => s.zone === 'aside' && !s.hidden && s.type !== 'pagebreak').length;
   if (hasAside && asideCount === 0) notes.push({ level: 'info', text: `Template "${m.design.template}" has a side column but no section is placed in it` });
   if (!hasAside && asideCount > 0) notes.push({ level: 'info', text: `Template "${m.design.template}" has no side column; aside sections render in the main flow` });
+  const breaks = m.sections.filter((s) => s.type === 'pagebreak' && !s.hidden);
+  if (breaks.length) {
+    const visible = m.sections.filter((s) => !s.hidden);
+    if (visible[visible.length - 1]?.type === 'pagebreak') notes.push({ level: 'info', text: 'The last visible section is a page break, so it has nothing left to push onto a new page' });
+    if (breaks.some((s) => s.zone === 'aside')) notes.push({ level: 'info', text: 'A page break in the side column does nothing; move it to the main column' });
+  }
+  // Switching meta.lang never rewrites a title. State the fact once, in one
+  // note, and leave the decision with the person who typed them.
+  const lang = str(m.meta?.lang) || 'en';
+  // resolveLang, not `lang !== 'en'`: "EN" and "en-GB" are English documents and
+  // must not be told to translate anything.
+  if (resolveLang(lang) !== 'en') {
+    const stillEnglish = m.sections.filter((s) => !s.hidden && s.title && s.title === sectionTitle('en', s.type)).map((s) => s.title);
+    if (stillEnglish.length) {
+      notes.push({ level: 'info', text: `meta.lang is "${lang}" but ${stillEnglish.length} section title${stillEnglish.length > 1 ? 's are' : ' is'} still the English default (${stillEnglish.join(', ')}). Nothing is renamed for you: retitle the ones you want translated.` });
+    }
+  }
   for (const s of m.sections) {
+    if (s.source === 'basics') {
+      if (!m.basics.links.length) notes.push({ level: 'info', text: `"${s.title || s.type}" mirrors Basics > Links, which is empty` });
+      continue;
+    }
     if (!s.hidden && SECTION_TYPES[s.type].fields.length && !s.items.length) notes.push({ level: 'info', text: `"${s.title || s.type}" has no items` });
     if (s.type === 'experience') {
       for (const it of s.items) {

@@ -1,6 +1,12 @@
 // The Catalog: templates rendered with the user's own resume, example files,
 // section types with live previews, and the design controls. Everything here
 // is drawn by the same renderer as the sheet, so a preview cannot go stale.
+// This import is not for the Catalog. js/a11y.js self-initialises on load and
+// nothing here calls it; it hangs off this file because a11y.js and catalog.js
+// share an owner and js/app.js, the obvious host, does not. Deliberate, frozen
+// as contract C10 in docs/delivery/CONTRACTS.md. Do not "tidy" it away: removing
+// it silently disables keyboard reordering and every move announcement.
+import './a11y.js';
 import { state } from './state.js';
 import { escHtml } from './utils.js';
 import { renderResume, renderSection, sheetClasses, sheetStyle } from './render.js';
@@ -13,20 +19,21 @@ let examples = null;
 let lastFocus = null;
 
 export const SAMPLES = {
-  text: { text: 'Building reliable cloud platforms that enable teams to move faster.\n\nCurrently in a data-driven phase, analysing systems from the top down.' },
-  experience: { items: [{ role: 'Reporting Tech Lead', company: 'Northwind Media', team: 'Professional Services', start: 'Sep 2025', end: 'Present', highlights: ['Designed internal reporting solutions.', 'Improved visibility across teams.'] }] },
-  education: { items: [{ degree: 'B.S. Computer Science', school: 'University of Chile', start: '2014', end: '2018', location: 'Santiago' }] },
+  text: { text: 'I build the paved road: clusters, pipelines and guardrails that let teams ship.\n\nEight years on Kubernetes and Terraform, with a soft spot for boring infrastructure.' },
+  experience: { items: [{ role: 'Platform Engineering Lead', company: 'Fabrikam Logistics', team: 'Developer Platform', start: 'Jan 2024', end: 'Present', highlights: ['Own the internal developer platform behind 40 services.', 'Run the on-call rotation and the monthly game day.'] }] },
+  education: { items: [{ degree: 'B.S. Computer Science', school: 'University of Lisbon', start: '2010', end: '2014', location: 'Lisbon' }] },
   skills: { items: [{ name: 'Kubernetes', level: 5, group: '' }, { name: 'AWS', level: 4, group: '' }, { name: 'GitLab CI', level: 4, group: '' }, { name: 'Terraform', level: 3, group: '' }] },
-  languages: { items: [{ name: 'Spanish', level: 'Native', score: 5 }, { name: 'English', level: 'Fluent', score: 4 }] },
+  languages: { items: [{ name: 'Portuguese', level: 'Native', score: 5 }, { name: 'English', level: 'Fluent', score: 4 }] },
   certifications: { items: [{ name: 'AWS Solutions Architect', issuer: 'Amazon', date: '2023' }] },
-  projects: { items: [{ name: 'Neorgon', role: 'Creator', url: 'https://neorgon.com', start: '2026', end: 'Present', summary: 'A hub of small browser tools.', highlights: ['60 sites, no backend'] }] },
-  awards: { items: [{ title: 'Engineer of the year', issuer: 'Northwind', date: '2024', summary: 'For the platform migration.' }] },
+  projects: { items: [{ name: 'Route planner', role: 'Maintainer', url: 'https://example.dev/routes', start: '2023', end: 'Present', summary: 'A bike-route planner for the coast.', highlights: ['8k monthly users, no backend'] }] },
+  awards: { items: [{ title: 'Engineer of the year', issuer: 'Fabrikam', date: '2024', summary: 'For the platform migration.' }] },
   volunteer: { items: [{ role: 'Mentor', org: 'Code Club', start: '2022', end: 'Present', highlights: ['Weekly sessions for beginners'] }] },
   publications: { items: [{ title: 'Boring clusters', publisher: 'Medium', date: 'Mar 2025', url: 'https://medium.com' }] },
   iconrow: { items: [{ label: 'GitHub', icon: 'github', url: 'https://github.com' }, { label: 'LinkedIn', icon: 'linkedin', url: 'https://linkedin.com' }, { label: 'Photography', icon: 'camera' }, { label: 'Games', icon: 'gamepad' }, { label: 'Steam', icon: 'steam' }] },
-  list: { items: [{ text: 'Chilean, based in Santiago', icon: 'pin' }, { text: 'Learned English because the memes were better', icon: '' }] },
+  list: { items: [{ text: 'Portuguese, based in Lisbon', icon: 'pin' }, { text: 'Learned Kubernetes on three thrift-store laptops', icon: '' }] },
   tags: { items: [{ name: 'Photography' }, { name: 'Board games' }, { name: 'Coffee' }] },
   contact: {},
+  pagebreak: {},
   references: { items: [{ name: 'Jane Smith', role: 'Engineering Manager, Acme', contact: 'jane@acme.example' }] },
   gaming: { data: { psn: { username: 'player1', stats: { level: 412, games: 88, trophies: { platinum: 12, gold: 120, silver: 300, bronze: 900 } } }, steam: { id: '', stats: null } } },
 };
@@ -44,12 +51,40 @@ export function sampleSection(type, zone) {
 
 export const isCatalogOpen = () => !document.getElementById('catalog').hidden;
 
+/* ── modality: inert behind, a trap inside ───────────────────
+   The overlay is a role="dialog" div rather than a native <dialog>, so it gets
+   neither of those for free. `inert` takes the whole page behind it out of the
+   tab order, out of the accessibility tree and out of reach of a click; it is
+   Baseline Widely available since April 2023, which is why the markup does not
+   need to change. The Tab wrap below is the in-page half: it binds to #catalog,
+   not to document, so it is inactive by construction whenever the overlay is
+   closed. Escape is handled once, in events.js, and is not re-implemented here. */
+
+const BEHIND = '.header-bar, .toolbar, #main, .neo-footer';
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+const setBehindInert = (on) => document.querySelectorAll(BEHIND).forEach((el) => { el.inert = on; });
+
+function onCatalogKey(e) {
+  if (e.key !== 'Tab') return;
+  const el = document.getElementById('catalog');
+  const stops = [...el.querySelectorAll(FOCUSABLE)].filter((n) => n.getClientRects().length);
+  if (!stops.length) return;
+  const first = stops[0];
+  const last = stops[stops.length - 1];
+  const here = document.activeElement;
+  if (e.shiftKey && (here === first || !el.contains(here))) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && here === last) { e.preventDefault(); first.focus(); }
+}
+
 export function openCatalog(tab = 'templates') {
   const el = document.getElementById('catalog');
   lastFocus = document.activeElement;
   currentTab = tab;
   el.hidden = false;
   document.body.classList.add('modal-open');
+  setBehindInert(true);
+  el.addEventListener('keydown', onCatalogKey);
   renderCatalog();
   el.querySelector('.cat-close')?.focus();
 }
@@ -58,7 +93,9 @@ export function closeCatalog() {
   const el = document.getElementById('catalog');
   if (el.hidden) return;
   el.hidden = true;
+  el.removeEventListener('keydown', onCatalogKey);
   document.body.classList.remove('modal-open');
+  setBehindInert(false);   // before the focus restore: focus cannot land in an inert subtree
   if (lastFocus && lastFocus.focus) lastFocus.focus();
 }
 
@@ -108,7 +145,7 @@ function sectionsHtml() {
     const wrap = sec.zone === 'aside'
       ? `<aside class="r-aside" style="padding:5mm 6mm;min-height:100%">${inner}</aside>`
       : `<main class="r-main" style="padding:5mm 6mm">${inner}</main>`;
-    const html = `<article class="${sheetClasses(doc.design)}" style="${sheetStyle(doc.design)};min-height:0;width:110mm">${wrap}</article>`;
+    const html = `<article class="${sheetClasses(doc.design)} is-editing" style="${sheetStyle(doc.design)};min-height:0;width:110mm">${wrap}</article>`;
     return `<div class="cat-card">
       <div class="cat-preview" style="aspect-ratio: 110 / 80"><div class="sheet-mini" data-mini="110">${html}</div></div>
       <div class="cat-card-head"><div class="cat-name">${escHtml(def.label)}</div><span class="cat-when">${escHtml(def.desc)}</span></div>

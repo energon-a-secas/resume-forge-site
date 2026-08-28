@@ -2,4 +2,8 @@ name = "resumeforge-api"
 main = "src/index.js"
 compatibility_date = "2024-01-01"
 
-# No secrets needed for public scraping
+# One secret, set out of band and never written into this file or the repo:
+#   wrangler secret put STEAM_API_KEY
+# Without it, /steam answers 501 NOT_CONFIGURED before it fetches anything, and the site
+# falls back to typing the numbers in by hand. /psn needs no secret: it is retired and
+# answers 410 RETIRED without any upstream call. See src/index.js for both reasons.

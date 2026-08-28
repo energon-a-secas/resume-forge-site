@@ -74,6 +74,13 @@ the standalone HTML export inlines it verbatim. `css/style.css` is the app chrom
   `catalog.js → SAMPLES`. Add a test round-trip if it has new field kinds.
 - Adding a palette or font pairing: `design.js` only. Palette names are colours, never brands.
 - Dates are free text in the model. Only the JSON Resume export converts them.
+- `section.source === 'basics'` (icon rows only) renders `basics.links` instead of the section's
+  own items; the Markdown marker token is `from-basics`. `design.links: none` hides the header copy.
+- Drag and drop (`events.js → initDragAndDrop`) is pointer-event based, not HTML5 DnD (a ghost
+  clone follows the pointer, `elementFromPoint` picks the target, Escape cancels, an aria-live
+  region announces the move). It rebuilds `sections` as main-then-aside when the template has a
+  side column; in single-column templates the list order is kept as dropped. Item cards collapse
+  to their heads while an item is in flight (`body.is-dnd-item`).
 
 ## Gotchas
 
@@ -90,6 +97,9 @@ the standalone HTML export inlines it verbatim. `css/style.css` is the app chrom
   preview would inherit the transform and the scroll container.
 - Inputs inside `<summary>` toggle the `<details>` on click; `events.js` calls
   `preventDefault()` for inputs and buttons inside a summary.
+- Desktop layout: `body { height: 100dvh }` above 1024px so `.editor-scroll` and `.preview-scroll`
+  scroll internally. `flex: 1` on `.workspace` silently defeated an explicit `height:` calc and the
+  whole page scrolled instead; verified with `scrollHeight === clientHeight` before the fix.
 - The CSP allows `img-src https:` on purpose: favicons (Google s2) and pasted image URLs.
 - The `tests/` glob in `package.json` is `tests/*.test.mjs`; `node --test tests/` alone fails
   on Node 22+.

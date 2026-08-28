@@ -45,8 +45,9 @@ browser; saves live in the browser's storage.
 
 ## Features
 
-- **Templates**: banner (the reference layout: band with a pattern or photo, circle portrait over the edge, pill headings), sidebar, split, classic (single column, parser-friendly), stripe, cards. Switching keeps every word.
-- **Sections as data**: experience, education, skills (tags, bars, dots, hearts, list, grid), languages, certifications, projects, awards, volunteering, publications, icon rows (socials, trophies, hobbies, tools), lists with a picture, tags, contact, references, gaming stats. Reorder, move between the main and side column, hide, delete.
+- **Templates**: banner (band with a pattern or photo, circle portrait over the edge, pill headings, icon tiles), sidebar, split, classic (single column, parser-friendly), stripe, cards. Switching keeps every word.
+- **Sections as data**: experience, education, skills (tags, bars, dots, hearts, list, grid), languages, certifications, projects, awards, volunteering, publications, icon rows (socials, trophies, hobbies, tools), lists with a picture, tags, contact, references, gaming stats. Drag between the main and side column groups or reorder with the arrows, hide, delete.
+- **Socials once**: type your links in Basics; an icon row with `source: basics` mirrors them as tiles in the side column (one click: "Show as tiles in the side column"), and `links: none` hides the copy beside the name.
 - **Icons three ways**: 101 brand marks from Simple Icons vendored and recoloured by the palette, 56 drawn glyphs, the link's favicon, or an uploaded file (SVG or PNG, e.g. from freeicons.io) kept as a data URI.
 - **Design**: palette, colour overrides, font pairing or any two Google Fonts, density, paper size, heading style, entry style (plain, timeline, cards), bullet glyph, photo shape and ring, banner shape, height, pattern and background image, column side and width.
 - **Catalog**: templates rendered with your own data, six complete example resumes, every section type with a live sample, the design controls.

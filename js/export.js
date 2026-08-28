@@ -1,13 +1,14 @@
 // Export and import. Files are detected by content, not only by extension,
 // because a JSON Resume is .json like our own JSON and a YAML may be .txt.
 import { state } from './state.js';
-import { toYAML, fromYAML, toJSON, fromJSON, toJsonResume } from './serialize.js';
+import { toYAML, fromYAML, toJSON, fromJSON, toJsonResume, toPlain } from './serialize.js';
 import { toMarkdown, fromMarkdown } from './markdown.js';
 import { importLinkedIn } from './linkedin.js';
 import { renderResume, pageCss } from './render.js';
 import { googleFontsUrl } from './design.js';
 import { fontsReady } from './fonts.js';
-import { downloadText, slugify, readAsText, showToast } from './utils.js';
+import { buildShareLink, countImages, MAX_LINK } from './share.js';
+import { downloadText, slugify, readAsText, showToast, copyText } from './utils.js';
 
 const JSZIP_URL = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
 const JSZIP_SRI = 'sha384-+mbV2IY1Zk/X1p/nWllGySJSUN8uMs+gUAN10Or95UBH0fpj6GfKgPmgC5EXieXG';
@@ -24,8 +25,71 @@ export async function exportAs(format) {
     case 'md': downloadText(toMarkdown(m), `${name}.resume.md`, 'text/markdown'); break;
     case 'html': downloadText(await standaloneHtml(m), `${name}.resume.html`, 'text/html'); break;
     case 'pdf': await exportPDF(); break;
+    case 'link': await exportLink(m); break;
     default: showToast(`Unknown export: ${format}`);
   }
+}
+
+/* ───────────────────────── share link ───────────────────────── */
+
+const n = (x) => x.toLocaleString('en-US');
+
+/** What the person is told before they can copy anything. */
+function shareNote(r) {
+  if (r.tooLong) {
+    return `This link is ${n(r.length)} characters. Safari stops opening links past about ${n(MAX_LINK)}, so this one would fail for some of the people you send it to. Turn the images off, or send the YAML file instead.`;
+  }
+  const size = `Link length: ${n(r.length)} characters, against the roughly ${n(MAX_LINK)} where Safari gives up.`;
+  if (r.dropped) return `${size} ${r.dropped === 1 ? 'One image is' : `${r.dropped} images are`} left out: images are almost all of the length.`;
+  if (r.images) return `${size} ${r.images === 1 ? 'One image is' : `${r.images} images are`} included.`;
+  return `${size} This resume carries no images.`;
+}
+
+/**
+ * Build the link, show its length, then let the person copy it.
+ *
+ * The measurement is not decoration. A resume with one photo is around 71,000
+ * characters and one with a photo and a banner is over 140,000, against a
+ * Safari ceiling near 80,000, so a link that is silently too long is a link
+ * that works for the sender and fails for the reader.
+ *
+ * The dialog lives in index.html and its buttons are wired here rather than in
+ * events.js, the same way confirmDialog wires its own. Handlers are assigned,
+ * not added, so reopening the dialog cannot stack them.
+ */
+async function exportLink(m) {
+  const dlg = document.getElementById('share-dialog');
+  if (!dlg) return;
+  const box = document.getElementById('share-url');
+  const note = document.getElementById('share-note');
+  const opt = document.getElementById('share-images');
+  const copyBtn = document.getElementById('share-copy');
+  const openBtn = document.getElementById('share-open');
+
+  const tree = toPlain(m);
+  opt.checked = false;
+  // Nothing to opt into when the resume carries no image at all.
+  opt.closest('label').hidden = countImages(tree) === 0;
+
+  let url = '';
+  const refresh = async () => {
+    const r = await buildShareLink(tree, { images: opt.checked });
+    url = r.url;
+    box.value = url;
+    note.textContent = shareNote(r);
+    copyBtn.disabled = r.tooLong;
+    openBtn.disabled = r.tooLong;
+  };
+
+  opt.onchange = refresh;
+  box.onfocus = () => box.select();
+  copyBtn.onclick = async () => {
+    showToast(await copyText(url) ? 'Link copied' : 'Copying was blocked; select the link and copy it by hand');
+  };
+  openBtn.onclick = () => window.open(url, '_blank', 'noopener');
+
+  await refresh();
+  dlg.showModal();
 }
 
 let resumeCssCache = '';

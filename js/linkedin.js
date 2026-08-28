@@ -164,7 +164,7 @@ export function importLinkedIn(files) {
     const d = splitDescription(pick(r, 'Description'));
     return { name: pick(r, 'Title', 'Name'), url: pick(r, 'Url'), start: pick(r, 'Started On'), end: pick(r, 'Finished On'), summary: d.summary, highlights: d.highlights };
   }));
-  add('skills', 'aside', 'Skills', rowsOf('skills', ['Name']).map((r) => ({ name: pick(r, 'Name', 'Skill'), level: 0, group: '' })), 'tags');
+  add('skills', 'aside', 'Skills', rowsOf('skills', ['Name', 'Skills']).map((r) => ({ name: pick(r, 'Name', 'Skill', 'Skills'), level: 0, group: '' })), 'tags');
   add('languages', 'aside', 'Languages', rowsOf('languages', ['Name', 'Proficiency']).map((r) => ({ name: pick(r, 'Name', 'Language'), level: pick(r, 'Proficiency'), score: proficiencyScore(pick(r, 'Proficiency')) })));
   add('certifications', 'aside', 'Certifications', rowsOf('certifications', ['Name', 'Authority']).map((r) => ({ name: pick(r, 'Name'), issuer: pick(r, 'Authority', 'Issuer'), date: pick(r, 'Started On', 'Issued On'), url: pick(r, 'Url'), id: pick(r, 'License Number') })));
   add('awards', 'main', 'Honors and awards', rowsOf('honors', ['Title', 'Issued On']).map((r) => ({ title: pick(r, 'Title'), date: pick(r, 'Issued On', 'Date'), summary: pick(r, 'Description') })));

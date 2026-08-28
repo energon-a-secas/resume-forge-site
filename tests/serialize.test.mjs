@@ -110,6 +110,24 @@ Climbing, Chess
   assert.equal(m.sections[0].text, 'Keeps clusters boring.');
 });
 
+test('section source and hidden survive YAML and Markdown', () => {
+  const m = normalizeResume({ resume: { basics: { name: 'A', links: [{ label: 'GitHub', url: 'https://github.com/a' }] },
+    sections: [{ type: 'iconrow', title: 'Socials', zone: 'aside', style: 'circles', source: 'basics' }, { type: 'tags', title: 'Old', zone: 'main', hidden: true, items: ['x'] }] } }).model;
+  const y = fromYAML(toYAML(m)).model;
+  assert.equal(y.sections[0].source, 'basics');
+  assert.equal(y.sections[0].style, 'circles');
+  assert.equal(y.sections[1].hidden, true);
+  const md = toMarkdown(m);
+  assert.ok(md.includes('<!-- iconrow aside circles from-basics -->'), md);
+  assert.ok(md.includes('<!-- tags main hidden -->'));
+  const back = fromMarkdown(md).model;
+  assert.equal(back.sections[0].source, 'basics');
+  assert.equal(back.sections[0].style, 'circles');
+  assert.deepEqual(back.sections[0].items, []);
+  assert.equal(back.sections[1].hidden, true);
+  assert.deepEqual(back.sections[1].items, [{ name: 'x' }]);
+});
+
 test('JSON Resume export has the official field names and imports back', () => {
   const a = fromYAML(examples[0][1]).model;
   const jr = toJsonResume(a);
@@ -125,7 +143,7 @@ test('JSON Resume export has the official field names and imports back', () => {
   assert.equal(back.basics.name, a.basics.name);
   const exp = back.sections.find((s) => s.type === 'experience');
   assert.equal(exp.items[0].role, a.sections.find((s) => s.type === 'experience').items[0].role);
-  assert.equal(exp.items[0].team, 'Professional Services', 'team survives via "Company (Team)"');
+  assert.equal(exp.items[0].team, 'Developer Platform', 'team survives via "Company (Team)"');
   assert.equal(exp.items[0].end, 'Present');
   // A JSON Resume file pasted into the JSON importer is recognised by shape.
   const viaJson = fromJSON(JSON.stringify(jr)).model;
@@ -201,4 +219,69 @@ test('a colon inside an unquoted YAML line becomes text, not [object Object]', (
   assert.equal(r.error, undefined, r.error);
   const it = r.model.sections[0].items[0];
   assert.deepEqual(it.highlights, ['Built the practice: 120 interviews', 'plain']);
+});
+
+test('a page break normalizes, and round-trips through YAML, JSON and Markdown', () => {
+  const src = { resume: { basics: { name: 'A' }, sections: [
+    { type: 'text', title: 'Profile', text: 'Hi' },
+    { type: 'pagebreak' },
+    { type: 'experience', title: 'Experience', items: [{ role: 'R', company: 'C' }] },
+  ] } };
+  const r = normalizeResume(src);
+  assert.deepEqual(r.warnings, [], 'a page break is a known type, not a warning');
+  const pb = r.model.sections[1];
+  assert.equal(pb.type, 'pagebreak');
+  assert.equal(pb.title, '', 'no title, in any language: the renderer emits a bare marker');
+  assert.equal(pb.zone, 'main');
+  assert.deepEqual(pb.items, [], 'it has no fields, so it has no items');
+  assert.equal(pb.hidden, false);
+
+  const content = (m) => m.sections.map(({ id, ...s }) => s);
+  const a = r.model;
+  assert.deepEqual(content(fromYAML(toYAML(a)).model), content(a), 'YAML');
+  assert.deepEqual(content(fromJSON(toJSON(a)).model), content(a), 'JSON');
+  const md = toMarkdown(a);
+  const back = fromMarkdown(md);
+  assert.equal(back.error, undefined);
+  assert.deepEqual(back.warnings, []);
+  assert.deepEqual(content(back.model), content(a), `Markdown\n${md}`);
+
+  // The marker is the whole of it: a heading comment and no body.
+  assert.ok(toYAML(a).includes('type: pagebreak'), 'the YAML names the type');
+  assert.ok(md.includes('<!-- pagebreak main -->'), md);
+  assert.equal(md.split('\n').filter((l) => /pagebreak/.test(l)).length, 1, 'exactly one line mentions it');
+
+  // Hidden, and in the side column, both survive a save.
+  const odd = normalizeResume({ resume: { basics: { name: 'A' }, sections: [{ type: 'pagebreak', zone: 'aside', hidden: true }, { type: 'text', text: 'x' }] } }).model;
+  const oddBack = fromYAML(toYAML(odd)).model;
+  assert.equal(oddBack.sections[0].hidden, true);
+  assert.equal(oddBack.sections[0].zone, 'aside');
+  assert.ok(lintResume(odd).every((n) => n.level !== 'warn'), 'an odd page break is an info note, never a warning');
+});
+
+test('photo framing clamps to integer percents and only exports when it is not the default', () => {
+  const framed = (photo) => normalizeResume({ resume: { basics: { name: 'A' }, design: { photo } } }).model.design.photo;
+  const xyz = (photo) => { const p = framed(photo); return [p.x, p.y, p.zoom]; };
+
+  assert.deepEqual(xyz({}), [50, 50, 100], 'the defaults, frozen in the contract');
+  assert.deepEqual(xyz(undefined), [50, 50, 100], 'no photo block at all');
+  assert.deepEqual(xyz({ x: 0, y: 100, zoom: 300 }), [0, 100, 300], 'the ends of both ranges are legal');
+  assert.deepEqual(xyz({ x: -40, y: 999, zoom: 5 }), [0, 100, 100], 'out of range clamps, silently');
+  assert.deepEqual(xyz({ x: 'left', y: null, zoom: {} }), [50, 50, 100], 'junk falls back to the default');
+  assert.deepEqual(xyz({ x: 33.7, y: '61.2', zoom: '150.9' }), [33, 61, 150], 'all three are integers');
+  assert.deepEqual(normalizeResume({ resume: { basics: { name: 'A' }, design: { photo: { x: 1 } } } }).warnings, [], 'framing never adds a warning');
+  // The other photo keys are untouched by the new ones.
+  const p = framed({ shape: 'square', size: 'lg', ring: false, x: 10 });
+  assert.equal(p.shape, 'square'); assert.equal(p.size, 'lg'); assert.equal(p.ring, false);
+
+  const exported = (photo) => toPlain(normalizeResume({ resume: { basics: { name: 'A' }, design: { photo } } }).model).resume.design.photo;
+  for (const k of ['x', 'y', 'zoom']) assert.ok(!(k in exported({})), `an unframed photo does not write ${k}`);
+  assert.deepEqual(exported({ x: 0, y: 20, zoom: 220 }), { shape: 'circle', size: 'md', ring: true, x: 0, y: 20, zoom: 220 }, 'x: 0 is a value, not an absence');
+  assert.deepEqual(exported({ zoom: 180 }), { shape: 'circle', size: 'md', ring: true, zoom: 180 }, 'only what moved is written');
+
+  // And it survives the trip back out and in.
+  const a = normalizeResume({ resume: { basics: { name: 'A' }, design: { photo: { x: 0, y: 88, zoom: 275 } } } }).model;
+  assert.deepEqual(fromYAML(toYAML(a)).model.design.photo, a.design.photo, 'YAML');
+  assert.deepEqual(fromJSON(toJSON(a)).model.design.photo, a.design.photo, 'JSON');
+  assert.deepEqual(fromMarkdown(toMarkdown(a)).model.design.photo, a.design.photo, 'Markdown carries design as JSON');
 });

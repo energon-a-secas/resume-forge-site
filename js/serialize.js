@@ -4,8 +4,9 @@
 // The YAML parser is js-yaml, loaded as a global (`jsyaml`) by index.html and
 // by the node tests, so this module has no import of its own for it.
 
-import { normalizeResume, SECTION_TYPES, newSection, blankItem, LEVEL_WORDS, blankResume } from './schema.js';
+import { normalizeResume, SECTION_TYPES, newSection, blankItem, blankResume } from './schema.js';
 import { detectIcon, iconTitle, hostOf } from './icons.js';
+import { pack, PRESENT } from './i18n.js';
 
 export function yamlLib() {
   const y = globalThis.jsyaml;
@@ -41,11 +42,12 @@ export function toPlain(model) {
     const def = SECTION_TYPES[s.type] || SECTION_TYPES.text;
     const o = { type: s.type, title: s.title, zone: s.zone };
     if (s.style) o.style = s.style;
+    if (s.source) o.source = s.source;
     if (s.columns && s.columns > 1) o.columns = s.columns;
     if (s.hidden) o.hidden = true;
     if (def.hasText || s.text) o.text = s.text;
     if (s.image) o.image = s.image;
-    if (def.fields.length) {
+    if (def.fields.length && s.source !== 'basics') {
       const zeroKeys = def.fields.filter((f) => f.kind === 'level').map((f) => f.key);
       o.items = s.items.map((it) => prune(it, zeroKeys));
     }
@@ -62,7 +64,16 @@ export function toPlain(model) {
     ...(d.fontScale && d.fontScale !== 1 ? { fontScale: d.fontScale } : {}),
     density: d.density, page: d.page, headings: d.headings, entries: d.entries, bullet: d.bullet,
     skills: d.skills, links: d.links, icons: d.icons,
-    photo: prune({ shape: d.photo.shape, size: d.photo.size, ring: d.photo.ring, ringColor: d.photo.ringColor }),
+    // Framing (x, y, zoom) is written only when it is not the default, the same
+    // rule fontScale follows above. A resume nobody has reframed therefore
+    // exports byte for byte as it did before the feature existed, and the
+    // defaults come back from normalizeDesign on load either way.
+    photo: {
+      ...prune({ shape: d.photo.shape, size: d.photo.size, ring: d.photo.ring, ringColor: d.photo.ringColor }),
+      ...(d.photo.x !== 50 ? { x: d.photo.x } : {}),
+      ...(d.photo.y !== 50 ? { y: d.photo.y } : {}),
+      ...(d.photo.zoom !== 100 ? { zoom: d.photo.zoom } : {}),
+    },
     banner: prune({ shape: d.banner.shape, height: d.banner.height, pattern: d.banner.pattern === 'none' ? '' : d.banner.pattern, image: d.banner.image, dim: d.banner.image ? d.banner.dim : '' }),
     columns: { side: d.columns.side, width: d.columns.width },
   };
@@ -105,7 +116,9 @@ export function fromJSON(text) {
 /* ───────────────────────── dates ───────────────────────── */
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-export const PRESENT = /^(present|current|now|ongoing|today|actualidad|presente)$/i;
+// Moved to i18n.js, where the renderer can read it without importing this
+// module. Re-exported so every existing importer keeps working unchanged.
+export { PRESENT };
 
 /** "Sep 2025" -> "2025-09", "2020" -> "2020", "Present" -> "" (open range), unparseable -> raw. */
 export function toIsoDate(s) {
@@ -148,7 +161,7 @@ export function fmtRange(start, end, sep = ' - ') {
 
 /* ───────────────────────── JSON Resume ───────────────────────── */
 
-const levelWord = (n) => LEVEL_WORDS[n] || undefined;
+const levelWord = (n) => pack('en').levels[n] || undefined;
 const wordLevel = (w) => {
   const s = String(w || '').toLowerCase();
   if (!s) return 0;

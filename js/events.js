@@ -9,9 +9,10 @@ import { openCatalog, closeCatalog, isCatalogOpen, setCatalogTab, renderCatalog,
 import { exportAs, importFiles, importText } from './export.js';
 import { toYAML, fromYAML } from './serialize.js';
 import { newSection, blankItem, normalizeResume, blankResume, SECTION_TYPES } from './schema.js';
+import { TEMPLATES } from './design.js';
 import { searchIcons, iconHtml, isImageSpec } from './icons.js';
 import { imageToDataUrl } from './assets.js';
-import { fetchPSNStats, fetchSteamStats } from './gaming.js';
+import { fetchPSNStats, fetchSteamStats, gamingError, clearGamingError } from './gaming.js';
 import { escHtml, showToast, debounce, getPath, setPath, copyText } from './utils.js';
 
 const $ = (id) => document.getElementById(id);
@@ -186,18 +187,37 @@ async function onAction(btn, e) {
     case 'del-link': doc.basics.links.splice(+btn.dataset.idx, 1); touch('links'); renderContentPanel(); break;
     case 'move-link': if (move(doc.basics.links, +btn.dataset.idx, +btn.dataset.dir)) { touch('links'); renderContentPanel(); } break;
     case 'clear-photo': doc.basics.photo = ''; touch('photo'); renderContentPanel(); break;
+    case 'links-to-aside': {
+      let s = doc.sections.find((x) => x.type === 'iconrow' && x.source === 'basics');
+      if (!s) {
+        s = newSection('iconrow', 'aside');
+        s.title = 'Socials'; s.source = 'basics'; s.items = [];
+        const firstAside = doc.sections.findIndex((x) => x.zone === 'aside');
+        doc.sections.splice(firstAside === -1 ? doc.sections.length : firstAside, 0, s);
+        state.ui.open[s.id] = true; savePrefs();
+        touch('sections'); renderContentPanel();
+        showToast(TEMPLATES[doc.design.template]?.aside ? 'Added "Socials" to the side column, mirroring these links. Design › Header links hides the copy beside the name.' : `Added "Socials" (side column); the ${doc.design.template} template shows it in the main flow.`);
+      } else {
+        s.zone = 'aside'; s.hidden = false; touch('sections'); renderContentPanel(); showToast(`"${s.title}" already mirrors these links`);
+      }
+      document.querySelector(`details[data-sid="${s.id}"]`)?.scrollIntoView({ block: 'center' });
+      break;
+    }
 
     case 'add-section': {
       const type = $('add-section-type').value;
       const zone = $('add-section-zone').value;
-      const s = newSection(type, zone);
+      // The language decides the default title of a section being born, and nothing
+      // else. Without it a section added at meta.lang: es was born with an English
+      // title while every loaded section around it was Spanish (CONTRACTS.md C7).
+      const s = newSection(type, zone, doc.meta.lang);
       doc.sections.push(s); state.ui.open[s.id] = true; savePrefs();
       touch('sections'); renderContentPanel();
       document.querySelector(`details[data-sid="${s.id}"]`)?.scrollIntoView({ block: 'center' });
       break;
     }
     case 'section-add': {
-      const s = newSection(btn.dataset.type, btn.dataset.zone);
+      const s = newSection(btn.dataset.type, btn.dataset.zone, doc.meta.lang);
       doc.sections.push(s); state.ui.open[s.id] = true; savePrefs();
       touch('sections'); renderContentPanel(); closeCatalog();
       switchTab('content');
@@ -243,8 +263,17 @@ async function onAction(btn, e) {
     }
     case 'design-colors-reset': doc.design.colors = {}; touch('design'); renderDesignPanel(); if (isCatalogOpen()) renderCatalog(); break;
 
-    case 'fetch-psn': { const s = secAt(btn); const stats = await fetchPSNStats(s.data.psn.username); if (stats) { s.data.psn.stats = stats; touch('gaming'); renderContentPanel(); } break; }
-    case 'fetch-steam': { const s = secAt(btn); const stats = await fetchSteamStats(s.data.steam.id); if (stats) { s.data.steam.stats = stats; touch('gaming'); renderContentPanel(); } break; }
+    case 'fetch-psn': await runGamingFetch(btn, 'psn'); break;
+    case 'fetch-steam': await runGamingFetch(btn, 'steam'); break;
+    case 'gaming-clear': {
+      const s = secAt(btn);
+      const side = s?.data?.[btn.dataset.provider];
+      if (!side) break;
+      side.stats = null;
+      clearGamingError(s.id);
+      touch('gaming'); renderContentPanel();
+      break;
+    }
 
     case 'example-load': {
       try {
@@ -265,6 +294,33 @@ async function onAction(btn, e) {
   }
 }
 
+/**
+ * One gaming fetch. Only a success reaches the model: an error is held in `gaming.js`,
+ * keyed by section id, and rendered by `editor.js` in a role="alert" line, so nothing
+ * about a failed fetch can reach localStorage, the YAML or an export (CONTRACTS.md C8).
+ * The fetch never blocks manual entry, which is why a failure re-renders and stops rather
+ * than throwing a toast: the fields the person needs are already on screen underneath.
+ */
+async function runGamingFetch(btn, provider) {
+  const s = secAt(btn);
+  const side = s?.data?.[provider];
+  if (!side) return;
+  const label = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Fetching…';
+  try {
+    const r = provider === 'psn'
+      ? await fetchPSNStats(side.username, s.id)
+      : await fetchSteamStats(side.id, s.id);
+    if (r.ok) side.stats = r.stats;
+    touch('gaming');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = label;
+  }
+  renderContentPanel();
+}
+
 function focusPath(path) {
   const el = document.querySelector(`[data-path="${path}"]`);
   if (el) { el.focus(); }
@@ -279,15 +335,37 @@ function closeMenus() {
 
 const designRerender = debounce(() => { renderDesignPanel(); if (isCatalogOpen()) renderCatalog(); }, 400);
 
+/**
+ * Typing a number by hand answers the failed fetch, so the alert goes away. It is removed
+ * from the DOM directly instead of through a re-render: re-rendering the panel on every
+ * keystroke would take the focus out of the box being typed in.
+ */
+function dismissGamingError(path) {
+  const m = /^sections\.(\d+)\.data\./.exec(path || '');
+  if (!m) return;
+  const sec = state.doc.sections[+m[1]];
+  if (!sec || !gamingError(sec.id)) return;
+  clearGamingError(sec.id);
+  document.querySelector(`details[data-sid="${sec.id}"] .field-error`)?.remove();
+}
+
 function onInput(el) {
   const doc = state.doc;
   if (el.dataset.path) {
     let v = el.value;
     if (el.dataset.kind === 'lines') v = v.split('\n').map((x) => x.replace(/^\s*[-*•✦▸◆→✓]\s*/, '').trim()).filter(Boolean);
     else if (el.dataset.kind === 'number') v = parseInt(v, 10) || 1;
+    // `int` and `num` are the gaming block's kinds and must stay separate from `number`
+    // above, which falls back to 1: a trophy count of zero is a real answer, and 1 is
+    // not (CONTRACTS.md C8). `num` keeps one decimal, for Steam hours.
+    else if (el.dataset.kind === 'int') v = parseInt(v, 10) || 0;
+    else if (el.dataset.kind === 'num') v = Math.round((parseFloat(v) || 0) * 10) / 10;
+    else if (el.dataset.kind === 'flag') v = el.checked ? (el.dataset.on || 'on') : '';
     setPath(doc, el.dataset.path, v);
+    dismissGamingError(el.dataset.path);
     refreshItemName(el.dataset.path);
     touch('edit');
+    if (el.dataset.kind === 'flag') renderContentPanel();
     return;
   }
   if (el.dataset.design) {
@@ -420,6 +498,7 @@ export function initEvents() {
     importFiles(e.dataTransfer.files).then((r) => applyImport(r, e.dataTransfer.files[0].name)).catch((err) => showToast(err.message));
   });
 
+  initDragAndDrop();
   window.addEventListener('resize', debounce(() => { layout(); if (isCatalogOpen()) scaleMinis(); }, 120));
 
   // state → views
@@ -433,4 +512,176 @@ export function initEvents() {
   });
   bus.addEventListener('library', refreshSavedSelect);
   bus.addEventListener('storage-failed', () => showToast('Storage is full or unavailable: this change was not saved. Remove an image or export the YAML.', 5000));
+}
+
+/* ── drag and drop: sections between column groups, items inside a section ──
+   Pointer events, not HTML5 drag-and-drop: deterministic on every input
+   (mouse, pen, touch), no native text-selection drags, and the drop target
+   comes from elementFromPoint under a pointer-events:none ghost. */
+
+let drag = null;   // { kind:'sec'|'item', sec, idx, block, startX, startY, active, ghost, target }
+
+function clearDropMarks() {
+  document.querySelectorAll('.drop-before, .drop-after, .drop-into').forEach((el) => el.classList.remove('drop-before', 'drop-after', 'drop-into'));
+}
+
+function endDrag() {
+  if (!drag) return;
+  drag.block?.classList.remove('is-dragging');
+  drag.ghost?.remove();
+  document.body.classList.remove('is-dnd', 'is-dnd-item');
+  clearDropMarks();
+  drag = null;
+}
+
+function startDrag(e) {
+  drag.active = true;
+  drag.block.classList.add('is-dragging');
+  // Items are tall cards of fields; collapse them to their heads while one is in flight
+  // so every drop slot is on screen without hunting through the form. Collapsing shifts
+  // the list, so the scroll position is corrected to keep the grabbed card under the pointer.
+  if (drag.kind === 'item') {
+    const sc = document.querySelector('.editor-scroll');
+    const before = drag.block.getBoundingClientRect().top;
+    document.body.classList.add('is-dnd-item');
+    const after = drag.block.getBoundingClientRect().top;
+    if (sc) sc.scrollTop += after - before;
+  }
+  const ghost = drag.block.cloneNode(true);
+  ghost.classList.add('drag-ghost');
+  ghost.style.width = `${drag.block.getBoundingClientRect().width}px`;
+  ghost.removeAttribute('open');
+  document.body.appendChild(ghost);
+  drag.ghost = ghost;
+  document.body.classList.add('is-dnd');
+  moveGhost(e);
+}
+
+function moveGhost(e) {
+  if (drag?.ghost) drag.ghost.style.transform = `translate(${e.clientX + 14}px, ${e.clientY - 16}px)`;
+}
+
+/** What sits under the pointer: a block/item (before or after its midpoint) or an empty group. */
+function dropTargetAt(x, y) {
+  const el = document.elementFromPoint(x, y);
+  if (!el) return null;
+  if (drag.kind === 'sec') {
+    const block = el.closest('details.block');
+    if (block && block !== drag.block) {
+      const r = block.getBoundingClientRect();
+      return { el: block, where: y < r.top + r.height / 2 ? 'before' : 'after', zone: block.closest('.zone-group')?.dataset.zone, sec: +block.dataset.secIdx };
+    }
+    if (block) return null;
+    const group = el.closest('.zone-group');
+    if (group) return { group, zone: group.dataset.zone };
+    return null;
+  }
+  const card = el.closest('.item-card');
+  if (card && card !== drag.block && +card.dataset.sec === drag.sec) {
+    const r = card.getBoundingClientRect();
+    return { el: card, where: y < r.top + r.height / 2 ? 'before' : 'after', idx: +card.dataset.item };
+  }
+  return null;
+}
+
+function markTarget(t) {
+  clearDropMarks();
+  if (!t) return;
+  if (t.el) t.el.classList.add(t.where === 'before' ? 'drop-before' : 'drop-after');
+  else if (t.group) t.group.classList.add('drop-into');
+}
+
+function autoscroll(y) {
+  const sc = document.querySelector('.editor-scroll');
+  if (!sc) return;
+  const r = sc.getBoundingClientRect();
+  if (y < r.top + 48) sc.scrollTop -= 14;
+  else if (y > r.bottom - 48) sc.scrollTop += 14;
+}
+
+function initDragAndDrop() {
+  document.addEventListener('pointerdown', (e) => {
+    const h = e.target.closest?.('[data-drag]');
+    if (!h || e.button !== 0) return;
+    e.preventDefault();
+    const kind = h.dataset.drag;
+    drag = {
+      kind, sec: +h.dataset.sec, idx: h.dataset.idx === undefined ? -1 : +h.dataset.idx,
+      block: h.closest(kind === 'sec' ? 'details.block' : '.item-card'),
+      startX: e.clientX, startY: e.clientY, active: false, ghost: null, target: null,
+    };
+  });
+  document.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    if (!drag.active) {
+      if (Math.abs(e.clientX - drag.startX) + Math.abs(e.clientY - drag.startY) < 6) return;
+      startDrag(e);
+    }
+    e.preventDefault();
+    moveGhost(e);
+    autoscroll(e.clientY);
+    drag.target = dropTargetAt(e.clientX, e.clientY);
+    markTarget(drag.target);
+  });
+  document.addEventListener('pointerup', (e) => {
+    if (!drag) return;
+    const d = drag;
+    // Hit-test at the release point: autoscroll may have moved content under the pointer since the last move.
+    const t = d.active ? (dropTargetAt(e.clientX, e.clientY) || d.target) : null;
+    endDrag();
+    if (t) applyDrop(d, t);
+  });
+  document.addEventListener('pointercancel', endDrag);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && drag) endDrag(); }, true);
+}
+
+function applyDrop(d, t) {
+  const doc = state.doc;
+  if (d.kind === 'item') {
+    const sec = doc.sections[d.sec];
+    if (!sec || t.idx === undefined) return;
+    let to = t.where === 'before' ? t.idx : t.idx + 1;
+    if (to === d.idx || to === d.idx + 1) return;
+    const [it] = sec.items.splice(d.idx, 1);
+    if (to > d.idx) to -= 1;
+    sec.items.splice(to, 0, it);
+    touch('items'); renderContentPanel();
+    announce(`Moved item to position ${to + 1}`);
+    return;
+  }
+  const moving = doc.sections[d.sec];
+  if (!moving) return;
+  const zone = t.zone || moving.zone;
+  const rest = doc.sections.filter((x) => x !== moving);
+  const anchor = t.sec !== undefined ? doc.sections[t.sec] : null;
+  if (anchor === moving) return;
+  const hasAside = TEMPLATES[doc.design.template]?.aside;
+  moving.zone = zone;
+  if (hasAside) {
+    // Rebuild as [main..., aside...] with the moved block where it was dropped.
+    const mainList = rest.filter((x) => x.zone !== 'aside');
+    const asideList = rest.filter((x) => x.zone === 'aside');
+    const list = zone === 'aside' ? asideList : mainList;
+    const ai = anchor ? list.indexOf(anchor) : -1;
+    if (ai === -1) list.push(moving); else list.splice(t.where === 'before' ? ai : ai + 1, 0, moving);
+    doc.sections = [...mainList, ...asideList];
+  } else {
+    const ai = anchor ? rest.indexOf(anchor) : -1;
+    if (ai === -1) rest.push(moving); else rest.splice(t.where === 'before' ? ai : ai + 1, 0, moving);
+    doc.sections = rest;
+  }
+  touch('sections'); renderContentPanel();
+  announce(`Moved "${moving.title || moving.type}" to the ${zone === 'aside' ? 'side' : 'main'} column`);
+}
+
+/** Polite live-region announcement for moves made by drag or by the arrow buttons. */
+export function announce(text) {
+  let el = document.getElementById('a11y-status');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'a11y-status'; el.className = 'sr-only'; el.setAttribute('role', 'status'); el.setAttribute('aria-live', 'polite');
+    document.body.appendChild(el);
+  }
+  el.textContent = '';
+  setTimeout(() => { el.textContent = text; }, 30);
 }

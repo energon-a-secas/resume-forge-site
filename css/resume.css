@@ -82,7 +82,15 @@
   width: var(--r-photo, 38mm); height: var(--r-photo, 38mm); flex: none;
   overflow: hidden; background: var(--r-card);
 }
-.r-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.r-photo img {
+  width: 100%; height: 100%; display: block;
+  object-fit: cover;
+  object-position: var(--r-photo-x, 50%) var(--r-photo-y, 50%);
+  transform: scale(var(--r-photo-zoom, 1));
+  /* Same focal point as object-position, so zooming holds that point still
+     instead of pulling the subject towards the middle of the frame. */
+  transform-origin: var(--r-photo-x, 50%) var(--r-photo-y, 50%);
+}
 .ps-circle .r-photo { border-radius: 50%; }
 .ps-rounded .r-photo { border-radius: 18%; }
 .ps-squircle .r-photo { border-radius: 32%; }
@@ -102,6 +110,21 @@
 /* ── sections ───────────────────────────────────────────────────────────── */
 .r-sec { margin-bottom: var(--r-gap-sec); }
 .r-sec:last-child { margin-bottom: 0; }
+
+/* Page break: a zero-height marker that forces the next content onto a new
+   printed page. It takes no room in the printed output, and shows as a dashed
+   rule only while editing, which is the .is-editing class mountSheet adds. */
+.r-pagebreak { break-after: page; page-break-after: always; height: 0; }
+.is-editing .r-pagebreak {
+  height: auto; margin: var(--r-gap-sec) 0; border-top: 1px dashed var(--r-rule);
+  text-align: center; line-height: 0;
+}
+.is-editing .r-pagebreak::after {
+  content: 'Page break'; display: inline-block; padding: 0 1.5mm;
+  background: var(--r-page); color: var(--r-muted);
+  font-size: 2.4mm; letter-spacing: .08em; text-transform: uppercase; line-height: 1;
+}
+.is-editing .r-aside .r-pagebreak::after { background: var(--r-aside-bg); color: var(--r-aside-text); }
 .r-sec-title {
   font-family: var(--r-font-h, 'Montserrat'), var(--r-font-b), system-ui, sans-serif;
   font-weight: 700; text-transform: uppercase; letter-spacing: .07em;

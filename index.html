@@ -98,6 +98,7 @@
           <button role="menuitem" data-act="export" data-format="md">Markdown (.md), readable, llms.txt style</button>
           <button role="menuitem" data-act="export" data-format="html">Standalone HTML (.html)</button>
           <button role="menuitem" data-act="export" data-format="pdf">PDF, via the browser's print dialog</button>
+          <button role="menuitem" data-act="export" data-format="link">Share link, nothing is uploaded</button>
         </div>
       </div>
       <button class="btn btn-sm btn-primary" data-act="export" data-format="pdf" title="Vector PDF through the print dialog: choose Save as PDF, no margins (P)">⬇ PDF</button>
@@ -231,6 +232,24 @@
     <h3 id="info-title">Import</h3>
     <div id="info-body" class="info-body"></div>
     <div class="neo-dialog-actions"><button class="btn btn-sm btn-primary" data-act="dialog-close">Done</button></div>
+  </dialog>
+
+  <!-- Share link. The buttons are wired in js/export.js, next to the code that
+       builds the link, because the length has to be measured before anyone can
+       copy it. -->
+  <dialog class="neo-dialog neo-dialog-wide" id="share-dialog" aria-labelledby="share-title">
+    <h3 id="share-title">Share link</h3>
+    <p class="dialog-sub">The whole resume travels inside the link. Everything after the <code>#</code> is the document, and a browser never sends that part to a server, so nothing is uploaded and there is nothing to delete later. Anyone holding the link can read it.</p>
+    <div class="info-body">
+      <p><label><input type="checkbox" id="share-images"> Include the photo and any banner image. They are almost all of a link's length, so they are left out unless you ask.</label></p>
+      <p id="share-note" role="status" aria-live="polite"></p>
+    </div>
+    <input type="text" id="share-url" class="input-sm input-wide" readonly spellcheck="false" aria-label="Share link">
+    <div class="neo-dialog-actions">
+      <button class="btn btn-sm" data-act="dialog-close">Close</button>
+      <button class="btn btn-sm" id="share-open">Open it</button>
+      <button class="btn btn-sm btn-primary" id="share-copy">Copy link</button>
+    </div>
   </dialog>
 
   <!-- Help -->
