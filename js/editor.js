@@ -8,6 +8,7 @@ import { SECTION_TYPES, TYPE_IDS, LEVEL_WORDS } from './schema.js';
 import { iconHtml, iconTitle, detectIcon } from './icons.js';
 import { designControlsHtml } from './design-panel.js';
 import { TEMPLATES } from './design.js';
+import { LANGS, resolveLang } from './i18n.js';
 
 const field = (path, f, value) => {
   const w = f.w === 'half' ? 'w-half' : 'w-full';
@@ -240,11 +241,24 @@ function sectionsListHtml() {
   return `<div id="sections-list">${group('main', 'Main column', main)}${group('aside', `Side column (${state.doc.design.columns.side})`, aside)}</div>`;
 }
 
+// Document language, not a design token: designControlsHtml only receives the
+// design object (and is shared with the Catalog), so the group is built here.
+// The select shows the resolved language but writes only on an explicit change,
+// so a regional tag like es-CL survives until the visitor actually switches.
+const LANG_NAMES = { en: 'English', es: 'Español' };
+function langGroupHtml(lang) {
+  const cur = resolveLang(lang);
+  const opts = LANGS.map(l => `<option value="${l}"${cur === l ? ' selected' : ''}>${escHtml(LANG_NAMES[l] || l)}</option>`).join('');
+  return `<div class="ctl-group"><label class="ctl-label" for="f-meta-lang">Language</label>
+    <select id="f-meta-lang" class="select-sm" data-path="meta.lang">${opts}</select>
+    <p class="panel-hint" style="margin:6px 0 0">Changes the words the sheet prints and the default title of new sections; titles you typed stay as written.</p></div>`;
+}
+
 export function renderDesignPanel() {
   const el = document.getElementById('panel-design');
   if (!el) return;
   const scroll = el.parentElement.scrollTop;
-  el.innerHTML = designControlsHtml(state.doc.design, { rich: false });
+  el.innerHTML = langGroupHtml(state.doc.meta.lang) + designControlsHtml(state.doc.design, { rich: false });
   el.parentElement.scrollTop = scroll;
 }
 
