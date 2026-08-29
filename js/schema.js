@@ -182,7 +182,7 @@ export const SECTION_TYPES = {
   },
   gaming: {
     label: 'Gaming stats', title: 'Gaming', zone: 'aside', fields: [], hasData: true,
-    desc: 'PSN trophies and Steam playtime fetched through the worker.',
+    desc: 'A PSN and a Steam block: level, trophy counts and hours played, typed in by hand.',
   },
   // Not a heading: the empty title is load-bearing. The renderer emits a bare
   // marker for it and the printed sheet shows nothing at all.
@@ -277,6 +277,47 @@ function normalizeItem(type, raw) {
   return it;
 }
 
+/**
+ * The gaming numbers, coerced to numbers (CONTRACTS.md C8).
+ *
+ * These are the one part of the model a person can type by hand *and* a fetch can
+ * write, so a YAML carrying `games: "412"` is ordinary rather than malformed. A
+ * string that looks like a number is still a string, and `st.games + 1` on it is
+ * "4121", so every numeric field goes through the same `int` as the rest of the file.
+ *
+ * A field nobody filled in stays *absent*, it does not become 0: `render.js` tests
+ * `!== undefined` to decide whether to draw a stat, and "no trophies recorded" and
+ * "zero trophies" are different claims to make on a resume.
+ */
+const given = (v) => v !== undefined && v !== null && v !== '';
+const intoInt = (src, out, key, hi) => { if (given(src[key])) out[key] = int(src[key], 0, hi, 0); };
+
+function normalizeStats(raw, provider) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const out = {};
+  if (provider === 'psn') {
+    intoInt(raw, out, 'level', 999);
+    intoInt(raw, out, 'games', 999999);
+    if (raw.trophies && typeof raw.trophies === 'object') {
+      const t = {};
+      for (const k of ['platinum', 'gold', 'silver', 'bronze']) intoInt(raw.trophies, t, k, 999999);
+      if (Object.keys(t).length) out.trophies = t;
+    }
+  } else {
+    intoInt(raw, out, 'games', 999999);
+    // Hours keep one decimal: half an hour is a real amount of playtime.
+    if (given(raw.playtime)) {
+      const n = parseFloat(raw.playtime);
+      out.playtime = Number.isFinite(n) ? Math.round(Math.max(0, n) * 10) / 10 : 0;
+    }
+    if (Array.isArray(raw.recentGames)) {
+      const g = raw.recentGames.map((x) => ({ name: str(typeof x === 'string' ? x : x?.name) })).filter((x) => x.name);
+      if (g.length) out.recentGames = g;
+    }
+  }
+  return out;
+}
+
 function normalizeLink(raw) {
   if (typeof raw === 'string') return { label: '', url: raw.trim(), icon: '' };
   if (!raw || typeof raw !== 'object') return null;
@@ -324,8 +365,8 @@ export function normalizeSection(raw, warnings = [], lang = 'en') {
   if (def.hasData) {
     const d = raw.data && typeof raw.data === 'object' ? raw.data : {};
     s.data = {
-      psn: { username: str(d.psn?.username), stats: d.psn?.stats && typeof d.psn.stats === 'object' ? d.psn.stats : null },
-      steam: { id: str(d.steam?.id), stats: d.steam?.stats && typeof d.steam.stats === 'object' ? d.steam.stats : null },
+      psn: { username: str(d.psn?.username), stats: normalizeStats(d.psn?.stats, 'psn') },
+      steam: { id: str(d.steam?.id), stats: normalizeStats(d.steam?.stats, 'steam') },
     };
   }
   return s;

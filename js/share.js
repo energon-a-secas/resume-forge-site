@@ -132,3 +132,40 @@ export function payloadFromUrl(input) {
   const m = String(input || '').match(/[#&]s=([A-Za-z0-9_-]+)/);
   return m ? m[1] : null;
 }
+
+/* ── the handoff: the only part of this file that touches the browser ── */
+
+/**
+ * "Make it yours" moves the resume from the viewer to the builder through session
+ * storage, not through the URL: same origin, same tab, and the address the builder
+ * opens carries no fragment at all. The key is written down here because both ends
+ * need the same string, and a storage key written down twice is one that drifts.
+ */
+export const HANDOFF_KEY = 'resume-forge-v2:handoff';
+
+/** Leave a tree for the builder. False when the browser refuses storage; the caller says so. */
+export function putHandoff(tree) {
+  try {
+    sessionStorage.setItem(HANDOFF_KEY, JSON.stringify(tree));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Take the waiting tree, and take it once: the key is removed whatever happens
+ * next, so a reload cannot ask again and a declined handoff cannot sit there
+ * waiting for a later visit. Null when there is nothing, or nothing readable.
+ */
+export function takeHandoff() {
+  let raw = null;
+  try {
+    raw = sessionStorage.getItem(HANDOFF_KEY);
+    sessionStorage.removeItem(HANDOFF_KEY);
+  } catch {
+    return null;
+  }
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+}

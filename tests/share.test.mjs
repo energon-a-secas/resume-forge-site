@@ -18,7 +18,21 @@ const { fromYAML, toPlain } = await import('../js/serialize.js');
 const {
   encodeShare, decodeShare, buildShareLink, shareUrl,
   stripImages, countImages, payloadFromUrl, MAX_LINK, SAFE_LINK,
+  putHandoff, takeHandoff, HANDOFF_KEY,
 } = await import('../js/share.js');
+
+// The handoff is the one browser-facing pair in share.js. Node has no session
+// storage, so the smallest possible stand-in stands in; the point of the test is
+// the protocol between view.html and the builder, not the storage engine.
+const fakeStorage = () => {
+  const m = new Map();
+  return {
+    getItem: (k) => (m.has(k) ? m.get(k) : null),
+    setItem: (k, v) => m.set(k, String(v)),
+    removeItem: (k) => m.delete(k),
+    get size() { return m.size; },
+  };
+};
 
 const libDir = new URL('../library/', import.meta.url);
 const examples = readdirSync(libDir)
@@ -145,6 +159,45 @@ test('C9: payloadFromUrl reads a whole URL or a bare hash, and rejects junk', ()
   assert.equal(payloadFromUrl('#nothing'), null);
   assert.equal(payloadFromUrl(''), null);
   assert.equal(payloadFromUrl(null), null);
+});
+
+test('C9: "Make it yours" hands the tree over once, and never through the URL', () => {
+  const store = fakeStorage();
+  globalThis.sessionStorage = store;
+  try {
+    const [, tree] = examples.find(([n]) => n === 'cloud-architect.yaml');
+    assert.equal(takeHandoff(), null, 'nothing waiting on an ordinary visit');
+
+    assert.equal(putHandoff(tree), true);
+    assert.equal(store.size, 1);
+    const got = takeHandoff();
+    assert.deepEqual(got, tree);
+    assert.equal(got.resume.basics.name, 'Marina Costa');
+
+    // Taken once: a reload of the builder must not offer it again.
+    assert.equal(store.size, 0, 'the key is removed as it is read');
+    assert.equal(takeHandoff(), null);
+
+    // The key is one string, shared by both ends rather than typed twice.
+    assert.equal(HANDOFF_KEY, 'resume-forge-v2:handoff');
+  } finally {
+    delete globalThis.sessionStorage;
+  }
+});
+
+test('C9: a browser with storage off is reported, not silently ignored', () => {
+  globalThis.sessionStorage = {
+    getItem() { throw new Error('The operation is insecure.'); },
+    setItem() { throw new Error('The operation is insecure.'); },
+    removeItem() { throw new Error('The operation is insecure.'); },
+  };
+  try {
+    // False is what makes view.js show its message instead of navigating away.
+    assert.equal(putHandoff({ resume: {} }), false);
+    assert.equal(takeHandoff(), null);
+  } finally {
+    delete globalThis.sessionStorage;
+  }
 });
 
 test('C9: a damaged link throws rather than rendering half a resume', async () => {

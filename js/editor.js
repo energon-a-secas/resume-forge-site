@@ -79,9 +79,10 @@ const statField = (path, label, kind = 'int', max = 999999) =>
  *
  * Manual entry is not the fallback here, it is the feature. PSN is retired at the worker
  * (410, no upstream call: the source blocks automated requests), and Steam needs a Web API
- * key this site may never hold, in which case the worker answers 501 for good. Both fetch
- * buttons are kept because a configured Steam key does work, but nothing below is behind
- * them: every number is reachable by typing, without ever pressing Fetch (CONTRACTS.md C8).
+ * key this site may never hold, in which case the worker answers 501 for good. Only Steam
+ * keeps a Fetch button, because a configured key does make it work; PSN has none, because
+ * every outcome it has left is an error. Nothing below either account is behind a button:
+ * every number is reachable by typing, without ever pressing Fetch (CONTRACTS.md C8).
  *
  * The error line shows the worker's own `message` and `hint`, which are written to be read
  * by a person, and it is read from the Map in `gaming.js` rather than from the model, so no
@@ -90,11 +91,15 @@ const statField = (path, label, kind = 'int', max = 999999) =>
 function gamingBlock(sec, base) {
   const d = sec.data || { psn: {}, steam: {} };
   const err = gamingError(sec.id);
-  const account = (provider, label, keyPath, ph, note) => `<div class="field w-full">
+  // `fetchable: false` prints no Fetch button at all. PSN is retired at the worker and can
+  // only ever answer 410, so an enabled control there is a dead end: its single possible
+  // outcome is an error line. Removing it is the structure saying what the prose says, that
+  // typing the numbers in is the path here and not the fallback (CONTRACTS.md C8).
+  const account = (provider, label, keyPath, ph, note, fetchable = true) => `<div class="field w-full">
       <label for="f-${keyPath.replace(/\./g, '-')}">${escHtml(label)}</label>
       <div class="field-row">
         <input id="f-${keyPath.replace(/\./g, '-')}" type="text" data-path="${keyPath}" value="${escHtml(getPath(state.doc, keyPath) || '')}" placeholder="${escHtml(ph)}">
-        <button type="button" class="btn btn-sm" data-act="fetch-${provider}" data-sec="${base.split('.')[1]}">Fetch</button>
+        ${fetchable ? `<button type="button" class="btn btn-sm" data-act="fetch-${provider}" data-sec="${base.split('.')[1]}">Fetch</button>` : ''}
       </div>
       <span class="empty-note">${escHtml(note)}</span>
     </div>`;
@@ -104,7 +109,7 @@ function gamingBlock(sec, base) {
   return `<div class="gaming-block">
     ${err ? `<p class="field-error" role="alert">${escHtml(err.message)}${err.hint ? ` ${escHtml(err.hint)}` : ''}</p>` : ''}
     <div class="grid-2">
-      ${account('psn', 'PSN username', `${base}.data.psn.username`, 'your-psn-id', 'Names the PSN block on the sheet. Fetching is retired, so type the numbers in below.')}
+      ${account('psn', 'PSN username', `${base}.data.psn.username`, 'your-psn-id', 'Names the PSN block on the sheet. There is no fetch for PSN: it is retired, so the numbers below are typed in.', false)}
       ${statField(`${base}.data.psn.stats.level`, 'Level', 'int', 999)}
       ${statField(`${base}.data.psn.stats.games`, 'Games played', 'int')}
       ${statField(`${base}.data.psn.stats.trophies.platinum`, 'Platinum trophies')}

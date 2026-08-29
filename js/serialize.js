@@ -148,7 +148,7 @@ export function fromIsoDate(s) {
 export function splitRange(s) {
   const v = String(s || '').trim();
   if (!v) return { start: '', end: '' };
-  const parts = v.split(/\s+(?:-|–|—|to|→|hasta)\s+/i);
+  const parts = v.split(/\s+(?:-|\u2013|\u2014|to|\u2192|hasta)\s+/i);
   if (parts.length >= 2) return { start: parts[0].trim(), end: parts.slice(1).join(' ').trim() };
   if (PRESENT.test(v)) return { start: '', end: v };
   return { start: v, end: '' };

@@ -43,6 +43,10 @@
                  padding: 10px 16px; background: #8b5cf6; color: #fff;
                  border-radius: 0 0 8px 0; font-size: .85rem; font-weight: 600; text-decoration: none; }
     .skip-link:focus { left: 0; }
+    /* `hidden` is how this page switches between the sheet and a message, and a
+       class that sets `display` outranks it: .v-stage{display:flex} left a whole
+       resume on screen under "This link did not open". Observed, then fixed. */
+    [hidden] { display: none !important; }
     .v-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px;
              padding: 12px 20px; border-bottom: 1px solid rgba(255,255,255,.1);
              background: rgba(255,255,255,.03); }

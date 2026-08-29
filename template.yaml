@@ -10,7 +10,11 @@
 resume:
   meta:
     title: My resume            # name in the saved list and the file name
-    lang: en                    # html lang of the sheet
+    lang: en                    # en | es. Sets the html lang of the sheet, the default title of
+                                # a new section, and the words the sheet prints itself: at "es" a
+                                # stored end date of "Present" prints as "Actualidad". These keys
+                                # stay English in every language, and so does the editor. A title
+                                # you have typed is never overwritten when you change this.
 
   basics:
     name: Marina Costa
@@ -183,14 +187,32 @@ resume:
           contact: jane@acme.example
           text: Optional quote.
 
-    - type: gaming                # PSN / Steam stats through the site's worker
-      title: Gaming
-      zone: aside
-      data:
-        psn:
-          username: ""
+    - type: pagebreak             # forces the next section onto a new page when printing.
+      zone: main                  # No title and no heading: it prints nothing itself and shows
+                                  # a dashed marker in the editing preview only. Put it in the
+                                  # main column; in the side column it does nothing.
+
+    - type: gaming                # PSN and Steam numbers. Type them in: every field here is
+      title: Gaming               # editable by hand, which is the normal way to fill it.
+      zone: aside                 # PSN fetching is retired (the source blocks automated
+      data:                       # requests). Steam fetching needs an API key the site owner
+        psn:                      # sets, and is off when there is none.
+          username: ""            # names the PSN block on the sheet
+          stats:
+            level: 0              # 0 to 999; leave a number out and it is not drawn at all
+            games: 0
+            trophies:
+              platinum: 0
+              gold: 0
+              silver: 0
+              bronze: 0
         steam:
-          id: ""
+          id: ""                  # 17 digits; names the Steam block on the sheet
+          stats:
+            games: 0              # games owned
+            playtime: 0           # hours, one decimal allowed
+            recentGames:          # up to three, shown on one line
+              - name: ""
 
     # Any section also accepts:  hidden: true   (kept in the file, not rendered)
 
@@ -214,6 +236,11 @@ resume:
       size: md                  # sm | md | lg
       ring: true
       ringColor: ""             # hex; empty = automatic
+      # Framing: crop the photo around a focal point. Whole percentages, no unit.
+      # Move the point onto the face first, then zoom in. Sliders in Design > Photo.
+      x: 50                     # 0 to 100, focal point left to right
+      y: 50                     # 0 to 100, focal point top to bottom
+      zoom: 100                 # 100 to 300, 100 is the whole picture
     banner:                     # banner template only
       shape: flat               # flat | slant | curve | rounded | none
       height: normal            # short | normal | tall

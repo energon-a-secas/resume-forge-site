@@ -18,6 +18,16 @@ import { escHtml, showToast, debounce, getPath, setPath, copyText } from './util
 const $ = (id) => document.getElementById(id);
 const move = (arr, i, dir) => { const j = i + dir; if (j < 0 || j >= arr.length) return false; [arr[i], arr[j]] = [arr[j], arr[i]]; return true; };
 
+/**
+ * The section a `data-sec` button points at. `data-sec` is the section's index in the model,
+ * so this reads `state.doc` at call time rather than closing over a snapshot.
+ *
+ * Module scope is load-bearing. It used to be declared inside `onAction`, which left the
+ * module-scope `runGamingFetch` throwing `ReferenceError: secAt is not defined` on every
+ * click of either Fetch button. Anything called from outside `onAction` needs it here.
+ */
+const secAt = (b) => state.doc.sections[+b.dataset.sec];
+
 let yamlDirty = false;
 let iconTarget = null;   // { path, urlPath }
 
@@ -154,10 +164,28 @@ function setIcon(value) {
 
 /* ── the one click handler ───────────────────────────────── */
 
-async function onAction(btn, e) {
+/**
+ * The last stop for a rejected action. `onAction` is async, so every `throw` inside it
+ * becomes a rejected promise; the click listener that calls it cannot await, because a
+ * listener that returns a promise is a promise nobody holds. Without this the rejection
+ * was swallowed whole and the click did nothing observable at all: no label change, no
+ * request, no error line, no console entry. That is how a one line scope bug
+ * (`secAt` out of reach of `runGamingFetch`) stayed invisible through a release.
+ *
+ * A bug here is not the person's fault and there is nothing for them to retry, so the toast
+ * says what happened and where the detail is, and the console carries the stack.
+ *
+ * Exported so a test can assert the failure surfaces rather than vanishing.
+ */
+export function reportActionFailure(act, err) {
+  console.error(`[resume-forge] the "${act}" action failed:`, err);
+  showToast(`Something went wrong running "${act}". The browser console has the details.`);
+  return { act, error: err };
+}
+
+export async function onAction(btn, e) {
   const act = btn.dataset.act;
   const doc = state.doc;
-  const secAt = (b) => doc.sections[+b.dataset.sec];
   switch (act) {
     case 'catalog': openCatalog(btn.dataset.tab || 'templates'); break;
     case 'catalog-close': closeCatalog(); break;
@@ -300,8 +328,11 @@ async function onAction(btn, e) {
  * about a failed fetch can reach localStorage, the YAML or an export (CONTRACTS.md C8).
  * The fetch never blocks manual entry, which is why a failure re-renders and stops rather
  * than throwing a toast: the fields the person needs are already on screen underneath.
+ *
+ * Exported for `tests/gaming.test.mjs`. It was the one action with no test at all, and it
+ * shipped dead because of it.
  */
-async function runGamingFetch(btn, provider) {
+export async function runGamingFetch(btn, provider) {
   const s = secAt(btn);
   const side = s?.data?.[provider];
   if (!side) return;
@@ -440,7 +471,7 @@ export function initEvents() {
     const btn = e.target.closest('[data-act]');
     if (btn) {
       if (btn.closest('summary')) e.preventDefault();
-      onAction(btn, e);
+      onAction(btn, e).catch((err) => reportActionFailure(btn.dataset.act, err));
       return;
     }
     if (e.target.closest('summary') && e.target.matches('input')) { e.preventDefault(); return; }
@@ -674,14 +705,19 @@ function applyDrop(d, t) {
   announce(`Moved "${moving.title || moving.type}" to the ${zone === 'aside' ? 'side' : 'main'} column`);
 }
 
-/** Polite live-region announcement for moves made by drag or by the arrow buttons. */
-export function announce(text) {
-  let el = document.getElementById('a11y-status');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'a11y-status'; el.className = 'sr-only'; el.setAttribute('role', 'status'); el.setAttribute('aria-live', 'polite');
-    document.body.appendChild(el);
-  }
-  el.textContent = '';
-  setTimeout(() => { el.textContent = text; }, 30);
-}
+/* DELIBERATELY INERT. #a11y-status has exactly one owner and it is js/a11y.js.
+ *
+ * That file creates the region and announces every reorder, drag included: a drop
+ * ends in touch(), touch() emits the 'doc' event, and a11y.js diffs the model on
+ * it. Its sentence names the position and the column ("Moved "Profile" to position
+ * 2 of 3 in the main column."). This function used to write the same element about
+ * 30ms later with a shorter version carrying no position, so every drag spoke
+ * twice and the weaker sentence, landing last, was the one that stuck.
+ *
+ * The name stays declared because the drag block above is frozen and still calls
+ * it; removing the name would break a block this file may not edit. Do not give it
+ * a body again: a second writer to #a11y-status restores the double announcement.
+ * If a drag ever needs to say something a11y.js cannot derive from the model, say
+ * it in js/a11y.js, which is the owner. Not exported, so nothing can import the
+ * dead path by mistake. */
+function announce(_text) { /* no-op */ }

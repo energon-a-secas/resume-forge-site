@@ -15,9 +15,8 @@
 import { normalizeResume } from './schema.js';
 import { renderResume, pageCss } from './render.js';
 import { ensureFonts } from './fonts.js';
-import { decodeShare, payloadFromUrl } from './share.js';
+import { decodeShare, payloadFromUrl, putHandoff } from './share.js';
 
-const HANDOFF = 'resume-forge-v2:handoff';
 const $ = (id) => document.getElementById(id);
 
 let tree = null;
@@ -32,6 +31,10 @@ function fail(title, body) {
   $('v-msg-title').textContent = title;
   $('v-msg-body').textContent = body;
   tree = null;
+  // A forwarded link that does not open must not leave the previous reader's
+  // resume underneath the message: only the fragment changed, so nothing else
+  // clears the sheet.
+  $('sheet-host').innerHTML = '';
   show('message');
 }
 
@@ -74,9 +77,7 @@ async function render() {
 /** Copy the resume into the builder, in this tab, through storage rather than the URL. */
 function makeItYours() {
   if (!tree) return;
-  try {
-    sessionStorage.setItem(HANDOFF, JSON.stringify(tree));
-  } catch {
+  if (!putHandoff(tree)) {
     fail('This browser will not hand the resume over',
       'Copying it into the builder needs session storage, which this browser has turned off or filled up. The link itself still works: keep it and open it in a browser that allows storage.');
     return;
