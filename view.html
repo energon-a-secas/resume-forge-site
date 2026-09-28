@@ -14,12 +14,11 @@
        no analytics: script-src and connect-src are 'self' and nothing else.
        'unsafe-inline' stays in style-src because renderResume writes the
        sheet's tokens into a style="..." attribute (render.js, sheetStyle). -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.neorgon.org; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'; frame-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; form-action 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.neorgon.org; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'; frame-src 'none'">
   <!-- A fragment is never in a Referer header anyway. no-referrer is here so
        that clicking a link inside a stranger's resume does not announce where
        it was read either. -->
   <meta name="referrer" content="no-referrer">
-  <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <!-- The fleet's counters are off here, and this is the one page where that
        matters: an analytics beacon that carried location.href would send the
        resume to a third party, which is exactly the thing this page tells the
