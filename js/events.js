@@ -82,8 +82,12 @@ async function applyImport(result, label) {
   setDoc(result.model, { source: 'import', docId: null });
   const warn = result.warnings || [];
   if (result.kind === 'linkedin') {
-    const rows = (result.report || []).map((r) => `<tr><td>${escHtml(r.file)}</td><td>${r.rows}</td></tr>`).join('');
-    infoDialog('LinkedIn import', `<p>Imported <strong>${escHtml(result.model.basics.name || 'your profile')}</strong> from ${result.report?.length || 0} file(s). LinkedIn dates, headline and descriptions are kept as written; skills arrive without levels and render as tags.</p><table><tr><th>File</th><th>Rows</th></tr>${rows}</table>${warn.length ? `<p>${escHtml(warn.join(' · '))}</p>` : ''}`);
+    // `missing` (js/linkedin.js COLUMNS) is how a column LinkedIn renamed shows up instead of a silent blank.
+    const report = result.report || [];
+    const drift = report.some((r) => r.missing?.length);
+    const rows = report.map((r) => `<tr><td>${escHtml(r.file)}</td><td>${r.rows}</td>${drift ? `<td>${escHtml((r.missing || []).join(', ') || 'none')}</td>` : ''}</tr>`).join('');
+    const found = drift || !report.length ? '' : '<p>Every column the importer reads was found.</p>';
+    infoDialog('LinkedIn import', `<p>Imported <strong>${escHtml(result.model.basics.name || 'your profile')}</strong> from ${report.length} file(s). LinkedIn dates, headline and descriptions are kept as written; skills arrive without levels and render as tags.</p><table><tr><th>File</th><th>Rows</th>${drift ? '<th>Columns not found</th>' : ''}</tr>${rows}</table>${found}${warn.length ? `<ul>${warn.map((w) => `<li>${escHtml(w)}</li>`).join('')}</ul>` : ''}`);
   } else if (warn.length) {
     infoDialog('Imported with notes', `<p>${escHtml(label)} loaded. The parser adjusted a few things:</p><ul>${warn.slice(0, 12).map((w) => `<li>${escHtml(w)}</li>`).join('')}</ul>`);
   } else showToast(`Loaded ${label}`);

@@ -39,7 +39,7 @@ share link and nothing else. The viewer never reads or writes the visitor's save
 | `js/render.js` | 385 | `renderResume` (pure HTML), `renderSection`, `sheetStyle`, `pageCss`, `mountSheet` |
 | `js/serialize.js` | 305 | YAML/JSON canonical tree, JSON Resume in/out, date helpers |
 | `js/markdown.js` | 329 | Markdown (llms.txt style) out and in, heading markers |
-| `js/linkedin.js` | 184 | CSV parser, LinkedIn export mapper (`importLinkedIn`) |
+| `js/linkedin.js` | 269 | CSV parser, `COLUMNS` (every header the importer reads), LinkedIn export mapper (`importLinkedIn`) and its missing-column report |
 | `js/icons.js` | 198 | glyphs, brand lookup, host detection, `iconHtml`, `searchIcons` |
 | `js/brand-icons.js` | 106 | GENERATED from assets/icons/brands by tools/build-icons.mjs |
 | `js/editor.js` | 266 | schema-driven Content tab, Design tab host, `iconField`, the gaming block |
@@ -49,7 +49,7 @@ share link and nothing else. The viewer never reads or writes the visitor's save
 | `js/export.js` | 206 | `exportAs` (pdf/yaml/json/jsonresume/md/html/link), `importFiles`, `importText`, the share dialog |
 | `js/share.js` | 171 | share payload (gzip + base64url), image stripping, length limits, the sessionStorage handoff |
 | `js/view.js` | 98 | `view.html` only: decode the fragment, render, print, "Make it yours" |
-| `js/events.js` | 723 | all listeners: data-act routing, inputs, dialogs, keys, drag and drop |
+| `js/events.js` | 727 | all listeners: data-act routing, inputs, dialogs, keys, drag and drop |
 | `js/a11y.js` | 353 | the reorder live region, keyboard reordering, runtime decoration of the drag handles |
 | `js/fonts.js` | 26 | Google Fonts link for the sheet |
 | `js/assets.js` | 48 | image resize to data: URIs |
@@ -236,6 +236,14 @@ unverified in the worker's own comments.
   not covered by the suite: a CSS change that stops the break working would ship silently. If you
   touch the print rules in `css/resume.css`, re-run that check by hand or you are shipping on the
   strength of a date.
+- **LinkedIn column names live in one place, `js/linkedin.js → COLUMNS`**, first name the real
+  header, synonyms after it. They were written from memory and **checked on 2026-11-02** against
+  the header rows of real exports dated 2026-03 to 2026-10 (sources at the top of the file): all
+  matched, nothing changed. `tests/linkedin.test.mjs` keeps those rows as `REAL_HEADERS` and fails
+  when `COLUMNS` reads a name they do not carry, so update `REAL_HEADERS` from a real export, never
+  from memory. A column LinkedIn renames later still imports as a blank field, but the import
+  dialog now names it ("Columns not found" plus a warning), so one drop of a fresh export is the
+  whole re-check.
 - A share link with one photo runs to about 71,000 characters and one with a photo and a banner
   to over 140,000, against the roughly 80,000 where Safari gives up. So images are stripped by
   default, the dialog shows the measured length of the whole URL, and Copy and Open are disabled

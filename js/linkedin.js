@@ -4,7 +4,22 @@
 // model. It is pure: the UI unzips (JSZip) and hands over {name, text} pairs.
 //
 // Headers are matched by normalised name with synonyms, so a column LinkedIn
-// renames later degrades to "field left blank", not "import failed".
+// renames later degrades to "field left blank", not "import failed", and the
+// import report names the column it could not find (COLUMNS below), so the
+// blank field is visible instead of silent.
+//
+// Provenance: the header names in COLUMNS were first written from memory. On
+// 2026-11-02 they were checked against the header rows (header rows only, no
+// data) of real exports published on GitHub: noahgoo/human-to-human
+// DEMO/Basic_LinkedInDataExport_10-02-2026.zip (Profile, Positions, Education,
+// Skills, Languages, Certifications, PhoneNumbers, Volunteering, Profile
+// Summary), David-Fuq/PersonalPortfolio Basic_LinkedInDataExport_03-17-2026
+// (Honors, Email Addresses), mcaliman/mcaliman.github.io linkedin/, committed
+// 2026-04-19 (Projects, Courses, Organizations, Publications) and
+// Ganesh2006646/Personal-Rag-LLM-Chatbot 20_linkdeln/, committed 2026-05-23
+// (Projects, Email Addresses). Every first name in COLUMNS matched exactly and
+// no header row began with a BOM. tests/linkedin.test.mjs keeps those header
+// rows as REAL_HEADERS and fails when COLUMNS reads a name they do not carry.
 
 import { blankResume, newSection, blankItem, normalizeResume } from './schema.js';
 
@@ -34,25 +49,36 @@ export function parseCSV(text) {
 
 const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
-/** Rows as objects keyed by normalised header; the header row is the first row that names a known column. */
-export function csvObjects(text, knownColumns = []) {
+/**
+ * The header row and the rows under it as objects keyed by normalised header. The header row is
+ * the first row that names a known column (Connections.csv opens with a "Notes:" preamble).
+ */
+export function csvTable(text, knownColumns = []) {
   const rows = parseCSV(text);
-  if (!rows.length) return [];
+  if (!rows.length) return { headers: [], rows: [] };
   const known = new Set(knownColumns.map(norm));
   let h = rows.findIndex((r) => r.some((c) => known.has(norm(c))));
   if (h === -1) h = 0;
   const headers = rows[h].map(norm);
-  return rows.slice(h + 1).map((r) => {
-    const o = {};
-    headers.forEach((k, i) => { if (k) o[k] = (r[i] || '').trim(); });
-    return o;
-  });
+  return {
+    headers,
+    rows: rows.slice(h + 1).map((r) => {
+      const o = {};
+      headers.forEach((k, i) => { if (k) o[k] = (r[i] || '').trim(); });
+      return o;
+    }),
+  };
+}
+
+/** Rows as objects keyed by normalised header. */
+export function csvObjects(text, knownColumns = []) {
+  return csvTable(text, knownColumns).rows;
 }
 
 const pick = (o, ...names) => { for (const n of names) { const v = o[norm(n)]; if (v) return v; } return ''; };
 
 const FILE_KEYS = {
-  profile: ['profile'], positions: ['positions'], education: ['education'], skills: ['skills'],
+  profile: ['profile'], profileSummary: ['profilesummary'], positions: ['positions'], education: ['education'], skills: ['skills'],
   languages: ['languages'], certifications: ['certifications'], projects: ['projects'], honors: ['honors', 'honours'],
   emails: ['emailaddresses', 'emails'], phones: ['phonenumbers', 'phones'], volunteering: ['volunteering'],
   publications: ['publications'], courses: ['courses'], organizations: ['organizations'],
@@ -63,6 +89,49 @@ export function classifyFile(name) {
   for (const [key, names] of Object.entries(FILE_KEYS)) if (names.includes(base)) return key;
   return '';
 }
+
+/**
+ * Every column the importer reads, per file: field -> accepted header names. The first name is
+ * the header LinkedIn writes (checked 2026-11-02, see the top of this file); the rest are
+ * synonyms. A field none of whose names is in the file's header row is reported as missing.
+ */
+export const COLUMNS = {
+  profile: {
+    first: ['First Name'], last: ['Last Name'], headline: ['Headline'], location: ['Geo Location', 'Location', 'Address'],
+    summary: ['Summary'], websites: ['Websites'], twitter: ['Twitter Handles'],
+  },
+  profileSummary: { text: ['Profile Summary'] },
+  emails: { email: ['Email Address', 'Email'], primary: ['Primary'] },
+  phones: { extension: ['Extension'], number: ['Number'] },
+  positions: {
+    company: ['Company Name', 'Company'], role: ['Title', 'Position'], description: ['Description'], location: ['Location'],
+    start: ['Started On', 'Start Date'], end: ['Finished On', 'End Date'],
+  },
+  education: {
+    school: ['School Name', 'School'], start: ['Start Date', 'Started On'], end: ['End Date', 'Finished On'], notes: ['Notes'],
+    degree: ['Degree Name', 'Degree'], activities: ['Activities'],
+  },
+  skills: { name: ['Name', 'Skill', 'Skills'] },
+  languages: { name: ['Name', 'Language'], proficiency: ['Proficiency'] },
+  certifications: { name: ['Name'], url: ['Url'], authority: ['Authority', 'Issuer'], start: ['Started On', 'Issued On'], license: ['License Number'] },
+  projects: { title: ['Title', 'Name'], description: ['Description'], url: ['Url'], start: ['Started On'], end: ['Finished On'] },
+  honors: { title: ['Title'], description: ['Description'], issued: ['Issued On', 'Date'] },
+  volunteering: {
+    org: ['Company Name', 'Organization'], role: ['Role', 'Position'], cause: ['Cause'], start: ['Started On'], end: ['Finished On'],
+    description: ['Description'],
+  },
+  publications: { name: ['Name', 'Title'], published: ['Published On', 'Date'], description: ['Description'], publisher: ['Publisher'], url: ['Url'] },
+  courses: { name: ['Name'], number: ['Number'] },
+  organizations: { name: ['Name'], position: ['Position'] },
+};
+
+/** The first name of each field in `cols` that the header row does not carry under any of its names. */
+export function missingColumns(headers, cols) {
+  const have = new Set(headers);
+  return Object.values(cols).filter((names) => !names.some((n) => have.has(norm(n)))).map((names) => names[0]);
+}
+
+const quoteList = (names) => names.map((n) => `"${n}"`).join(names.length > 2 ? ', ' : ' or ').replace(/, ("[^"]*")$/, ', or $1');
 
 const splitDescription = (text) => {
   const lines = String(text || '').split(/\r?\n/).map((x) => x.trim()).filter(Boolean);
@@ -96,7 +165,8 @@ export function parseWebsites(raw) {
 
 /**
  * @param {{name:string, text:string}[]} files  CSVs from the LinkedIn export
- * @returns {{model, warnings:string[], report:{file:string, rows:number}[]}}
+ * @returns {{model, warnings:string[], report:{file:string, rows:number, missing:string[]}[]}}
+ *   `missing` names the columns (by COLUMNS' first name) the file's header row did not carry.
  */
 export function importLinkedIn(files) {
   const m = blankResume();
@@ -111,36 +181,51 @@ export function importLinkedIn(files) {
   if (!Object.keys(byKey).length) {
     return { model: null, warnings: ['No recognised LinkedIn CSV found (expected Profile.csv, Positions.csv, Education.csv, Skills.csv ...)'], report };
   }
-  const rowsOf = (key, cols) => {
+  // Each row comes back as a getter over that file's COLUMNS entry: get('start') reads
+  // "Started On" or its synonym. `anchors` find the header row; they are not the column list.
+  const rowsOf = (key, anchors) => {
     const f = byKey[key];
     if (!f) return [];
-    const rows = csvObjects(f.text, cols);
-    report.push({ file: f.name.split('/').pop(), rows: rows.length });
-    return rows;
+    const cols = COLUMNS[key];
+    const file = f.name.split('/').pop();
+    const { headers, rows } = csvTable(f.text, anchors);
+    const missing = headers.length ? missingColumns(headers, cols) : [];
+    report.push({ file, rows: rows.length, missing });
+    if (missing.length) {
+      const one = missing.length === 1;
+      warnings.push(`${file} has no ${quoteList(missing)} column, so ${one ? 'that field was' : 'those fields were'} left blank. LinkedIn may have renamed ${one ? 'it' : 'them'}.`);
+    }
+    return rows.map((r) => (field) => pick(r, ...cols[field]));
   };
 
   const prof = rowsOf('profile', ['First Name', 'Headline'])[0];
   let summary = '';
   if (prof) {
-    m.basics.name = [pick(prof, 'First Name'), pick(prof, 'Last Name')].filter(Boolean).join(' ');
-    m.basics.title = pick(prof, 'Headline');
-    m.basics.location = pick(prof, 'Geo Location', 'Location', 'Address');
-    summary = pick(prof, 'Summary');
-    const sites = parseWebsites(pick(prof, 'Websites'));
+    m.basics.name = [prof('first'), prof('last')].filter(Boolean).join(' ');
+    m.basics.title = prof('headline');
+    m.basics.location = prof('location');
+    summary = prof('summary');
+    const sites = parseWebsites(prof('websites'));
     if (sites.length) {
       m.basics.website = sites[0].url;
       for (const s of sites.slice(1)) m.basics.links.push({ label: s.label, url: s.url, icon: '' });
     }
-    const tw = pick(prof, 'Twitter Handles');
+    const tw = prof('twitter');
     if (tw) m.basics.links.push({ label: 'X', url: `https://x.com/${tw.replace(/^@/, '').split(',')[0].trim()}`, icon: 'x' });
   }
+  // Newer exports also carry a one-column Profile Summary.csv. Profile.csv's Summary still holds
+  // the text in the exports checked, so this file is read only when that column is empty.
+  const about = rowsOf('profileSummary', ['Profile Summary']).map((get) => get('text')).filter(Boolean).join('\n');
+  if (!summary && about) summary = about;
   const emails = rowsOf('emails', ['Email Address']);
   if (emails.length) {
-    const primary = emails.find((e) => /yes|true/i.test(pick(e, 'Primary'))) || emails[0];
-    m.basics.email = pick(primary, 'Email Address', 'Email');
+    const primary = emails.find((get) => /yes|true/i.test(get('primary'))) || emails[0];
+    m.basics.email = primary('email');
+  } else if (prof && !byKey.emails) {
+    warnings.push('No Email Addresses.csv among the files, so the email is blank; add it in the editor.');
   }
   const phones = rowsOf('phones', ['Number']);
-  if (phones.length) m.basics.phone = [pick(phones[0], 'Extension'), pick(phones[0], 'Number')].filter(Boolean).join(' ');
+  if (phones.length) m.basics.phone = [phones[0]('extension'), phones[0]('number')].filter(Boolean).join(' ');
 
   const add = (type, zone, title, items, style = '') => {
     if (!items.length) return;
@@ -151,31 +236,31 @@ export function importLinkedIn(files) {
   };
   if (summary) { const s = newSection('text', 'main'); s.title = 'Profile'; s.text = summary; m.sections.push(s); }
 
-  add('experience', 'main', 'Experience', rowsOf('positions', ['Company Name', 'Title']).map((r) => {
-    const d = splitDescription(pick(r, 'Description'));
-    const start = pick(r, 'Started On', 'Start Date');
-    return { role: pick(r, 'Title', 'Position'), company: pick(r, 'Company Name', 'Company'), location: pick(r, 'Location'), start, end: pick(r, 'Finished On', 'End Date') || (start ? 'Present' : ''), summary: d.summary, highlights: d.highlights };
+  add('experience', 'main', 'Experience', rowsOf('positions', ['Company Name', 'Title']).map((get) => {
+    const d = splitDescription(get('description'));
+    const start = get('start');
+    return { role: get('role'), company: get('company'), location: get('location'), start, end: get('end') || (start ? 'Present' : ''), summary: d.summary, highlights: d.highlights };
   }));
-  add('education', 'main', 'Education', rowsOf('education', ['School Name', 'Degree Name']).map((r) => ({
-    school: pick(r, 'School Name', 'School'), degree: pick(r, 'Degree Name', 'Degree'), start: pick(r, 'Start Date', 'Started On'), end: pick(r, 'End Date', 'Finished On'),
-    notes: [pick(r, 'Notes'), pick(r, 'Activities')].filter(Boolean).join(' '),
+  add('education', 'main', 'Education', rowsOf('education', ['School Name', 'Degree Name']).map((get) => ({
+    school: get('school'), degree: get('degree'), start: get('start'), end: get('end'),
+    notes: [get('notes'), get('activities')].filter(Boolean).join(' '),
   })));
-  add('projects', 'main', 'Projects', rowsOf('projects', ['Title', 'Url']).map((r) => {
-    const d = splitDescription(pick(r, 'Description'));
-    return { name: pick(r, 'Title', 'Name'), url: pick(r, 'Url'), start: pick(r, 'Started On'), end: pick(r, 'Finished On'), summary: d.summary, highlights: d.highlights };
+  add('projects', 'main', 'Projects', rowsOf('projects', ['Title', 'Url']).map((get) => {
+    const d = splitDescription(get('description'));
+    return { name: get('title'), url: get('url'), start: get('start'), end: get('end'), summary: d.summary, highlights: d.highlights };
   }));
-  add('skills', 'aside', 'Skills', rowsOf('skills', ['Name', 'Skills']).map((r) => ({ name: pick(r, 'Name', 'Skill', 'Skills'), level: 0, group: '' })), 'tags');
-  add('languages', 'aside', 'Languages', rowsOf('languages', ['Name', 'Proficiency']).map((r) => ({ name: pick(r, 'Name', 'Language'), level: pick(r, 'Proficiency'), score: proficiencyScore(pick(r, 'Proficiency')) })));
-  add('certifications', 'aside', 'Certifications', rowsOf('certifications', ['Name', 'Authority']).map((r) => ({ name: pick(r, 'Name'), issuer: pick(r, 'Authority', 'Issuer'), date: pick(r, 'Started On', 'Issued On'), url: pick(r, 'Url'), id: pick(r, 'License Number') })));
-  add('awards', 'main', 'Honors and awards', rowsOf('honors', ['Title', 'Issued On']).map((r) => ({ title: pick(r, 'Title'), date: pick(r, 'Issued On', 'Date'), summary: pick(r, 'Description') })));
-  add('volunteer', 'main', 'Volunteering', rowsOf('volunteering', ['Company Name', 'Role']).map((r) => {
-    const d = splitDescription(pick(r, 'Description'));
-    const cause = pick(r, 'Cause');
-    return { role: pick(r, 'Role', 'Position'), org: pick(r, 'Company Name', 'Organization'), start: pick(r, 'Started On'), end: pick(r, 'Finished On'), summary: [cause, d.summary].filter(Boolean).join(': '), highlights: d.highlights };
+  add('skills', 'aside', 'Skills', rowsOf('skills', ['Name', 'Skills']).map((get) => ({ name: get('name'), level: 0, group: '' })), 'tags');
+  add('languages', 'aside', 'Languages', rowsOf('languages', ['Name', 'Proficiency']).map((get) => ({ name: get('name'), level: get('proficiency'), score: proficiencyScore(get('proficiency')) })));
+  add('certifications', 'aside', 'Certifications', rowsOf('certifications', ['Name', 'Authority']).map((get) => ({ name: get('name'), issuer: get('authority'), date: get('start'), url: get('url'), id: get('license') })));
+  add('awards', 'main', 'Honors and awards', rowsOf('honors', ['Title', 'Issued On']).map((get) => ({ title: get('title'), date: get('issued'), summary: get('description') })));
+  add('volunteer', 'main', 'Volunteering', rowsOf('volunteering', ['Company Name', 'Role']).map((get) => {
+    const d = splitDescription(get('description'));
+    const cause = get('cause');
+    return { role: get('role'), org: get('org'), start: get('start'), end: get('end'), summary: [cause, d.summary].filter(Boolean).join(': '), highlights: d.highlights };
   }));
-  add('publications', 'main', 'Publications', rowsOf('publications', ['Name', 'Publisher']).map((r) => ({ title: pick(r, 'Name', 'Title'), publisher: pick(r, 'Publisher'), date: pick(r, 'Published On', 'Date'), url: pick(r, 'Url'), summary: pick(r, 'Description') })));
-  add('list', 'aside', 'Courses', rowsOf('courses', ['Name']).map((r) => ({ text: [pick(r, 'Name'), pick(r, 'Number')].filter(Boolean).join(' '), icon: '' })));
-  add('list', 'main', 'Organizations', rowsOf('organizations', ['Name', 'Position']).map((r) => ({ text: [pick(r, 'Name'), pick(r, 'Position')].filter(Boolean).join(', '), icon: '' })));
+  add('publications', 'main', 'Publications', rowsOf('publications', ['Name', 'Publisher']).map((get) => ({ title: get('name'), publisher: get('publisher'), date: get('published'), url: get('url'), summary: get('description') })));
+  add('list', 'aside', 'Courses', rowsOf('courses', ['Name']).map((get) => ({ text: [get('name'), get('number')].filter(Boolean).join(' '), icon: '' })));
+  add('list', 'main', 'Organizations', rowsOf('organizations', ['Name', 'Position']).map((get) => ({ text: [get('name'), get('position')].filter(Boolean).join(', '), icon: '' })));
 
   if (!m.basics.name && !m.sections.length) warnings.push('The files were recognised but held no rows');
   m.meta.title = m.basics.name ? `${m.basics.name} (LinkedIn import)` : 'LinkedIn import';
