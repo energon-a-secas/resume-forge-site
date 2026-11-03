@@ -321,7 +321,7 @@ body.is-dragging::after { content: 'Drop a YAML, JSON, Markdown, CSV or LinkedIn
   .preview-scroll { padding: 10px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+  *, *::before, *::after { transition: none !important; animation-duration: .01ms !important; }
 }
 
 /* ── print: only the cloned sheet ──────────────────────────── */
