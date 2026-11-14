@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (r.model) {
         setDoc(r.model, { source: 'first-run', docId: null });
         state.dirty = false;
-        showToast('This is an example resume. Import yours (YAML, JSON Resume, LinkedIn ZIP) or edit it on the left.', 6000);
+        showToast('This is an example resume. Import yours (YAML, JSON Resume, LinkedIn ZIP) or edit it in the Content tab.', 6000);
       }
     } catch { /* offline first run: the blank document stays */ }
   }

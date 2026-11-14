@@ -380,6 +380,17 @@ export function pageCss(design) {
 export function mountSheet(container, m) {
   container.innerHTML = renderResume(m);
   const el = container.firstElementChild;
-  if (el) el.classList.add('is-editing');
+  if (el) {
+    el.classList.add('is-editing');
+    // In the builder the sheet sits under the page's own h1, so its headings
+    // step down a level (name h2, sections h3). Classes carry the styling; the
+    // PDF and the exports render the string and keep h1 and h2.
+    for (const h of el.querySelectorAll('h1, h2')) {
+      const n = document.createElement(h.tagName === 'H1' ? 'h2' : 'h3');
+      for (const a of h.attributes) n.setAttribute(a.name, a.value);
+      n.append(...h.childNodes);
+      h.replaceWith(n);
+    }
+  }
   return el;
 }

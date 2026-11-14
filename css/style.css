@@ -310,7 +310,9 @@ body.is-dragging::after { content: 'Drop a YAML, JSON, Markdown, CSV or LinkedIn
 
 /* ── responsive ────────────────────────────────────────────── */
 @media (max-width: 1024px) {
-  .workspace { grid-template-columns: 1fr; }
+  /* minmax(0, 1fr): a bare 1fr track grows to its content's min-content width,
+     which ran the page to 501px at 390. The panes scroll inside instead. */
+  .workspace { grid-template-columns: minmax(0, 1fr); }
   .editor { border-right: 0; border-bottom: 1px solid var(--border, rgba(255,255,255,.1)); max-height: 60vh; }
   .preview { min-height: 70vh; }
   .toolbar-saves { margin-left: 0; }
